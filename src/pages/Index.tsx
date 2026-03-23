@@ -1,16 +1,449 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useMemo, useCallback } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+} from 'recharts';
+import {
+  ArrowDownLeft, ArrowUpRight, TrendingDown, TrendingUp, List,
+  Activity, AlertTriangle, Gavel, PieChart, Info, Search,
+  ChevronRight, TrendingUp as TrendingUpIcon, Award, Shield,
+  Cpu, GitBranch, BarChart2, X, Lightbulb, Menu, XIcon,
+} from 'lucide-react';
+import {
+  generateEquityData, tradeHistory, radarData, conceptCards,
+  metricsStrategy, metricsSP500,
+} from '@/data/mockData';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
-  );
+type ViewType = 'results' | 'learn';
+
+const iconMap: Record<string, React.ElementType> = {
+  TrendingUp, Activity, TrendingDown, BarChart2, Cpu, Shield, GitBranch, AlertTriangle, Award,
 };
 
-const Index = PlaceholderIndex;
+export default function App() {
+  const [currentView, setCurrentView] = useState<ViewType>('results');
+  const [metricTab, setMetricTab] = useState<'strategy' | 'sp500'>('strategy');
+  const [expandedConcept, setExpandedConcept] = useState<string | null>(null);
+  const [learnFilter, setLearnFilter] = useState('All');
+  const [learnSearch, setLearnSearch] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-export default Index;
+  const equityData = useMemo(() => generateEquityData(), []);
+  const metrics = metricTab === 'strategy' ? metricsStrategy : metricsSP500;
+
+  const filteredConcepts = useMemo(() => {
+    return conceptCards.filter(c => {
+      const matchFilter = learnFilter === 'All' || c.category === learnFilter || c.tags.includes(learnFilter);
+      const matchSearch = !learnSearch || c.title.toLowerCase().includes(learnSearch.toLowerCase()) || c.body.toLowerCase().includes(learnSearch.toLowerCase());
+      return matchFilter && matchSearch;
+    });
+  }, [learnFilter, learnSearch]);
+
+  const expandedCard = expandedConcept ? conceptCards.find(c => c.id === expandedConcept) : null;
+
+  return (
+    <div className="min-h-screen bg-slate-950 noise-bg relative">
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <BarChart2 size={16} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-bold text-slate-100 text-lg" style={{ fontFamily: 'Syne' }}>BacktestIQ</span>
+          </div>
+          <div className="hidden md:flex items-center gap-1">
+            {(['results', 'learn'] as ViewType[]).map(v => (
+              <button key={v} onClick={() => setCurrentView(v)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${currentView === v ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'text-slate-400 hover:text-slate-200'}`}>
+                {v === 'results' ? 'Results' : 'Learn'}
+              </button>
+            ))}
+          </div>
+          <button className="md:hidden text-slate-400" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <XIcon size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl px-6 py-3 flex flex-col gap-2">
+            {(['results', 'learn'] as ViewType[]).map(v => (
+              <button key={v} onClick={() => { setCurrentView(v); setMobileMenuOpen(false); }}
+                className={`px-4 py-2 rounded-xl text-sm font-medium text-left transition-all ${currentView === v ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400'}`}>
+                {v === 'results' ? 'Results' : 'Learn'}
+              </button>
+            ))}
+          </div>
+        )}
+      </nav>
+
+      <div className="relative z-10 pt-16">
+        {currentView === 'results' && <ResultsView equityData={equityData} metrics={metrics} metricTab={metricTab} setMetricTab={setMetricTab} setCurrentView={setCurrentView} />}
+        {currentView === 'learn' && <LearnView concepts={filteredConcepts} filter={learnFilter} setFilter={setLearnFilter} search={learnSearch} setSearch={setLearnSearch} expandedCard={expandedCard} setExpandedConcept={setExpandedConcept} setCurrentView={setCurrentView} />}
+      </div>
+    </div>
+  );
+}
+
+/* ─── RESULTS VIEW ────────────────────────────────────────────── */
+
+function ResultsView({ equityData, metrics, metricTab, setMetricTab, setCurrentView }: any) {
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-6 pb-12 pt-8">
+      {/* Chart area */}
+      <div className="xl:col-span-3">
+        <PerformanceChart data={equityData} />
+        <TradeHistoryTable />
+      </div>
+      {/* Sidebar */}
+      <div className="xl:col-span-1 space-y-6">
+        <PerformanceMetrics metrics={metrics} tab={metricTab} setTab={setMetricTab} />
+        <VerdictPanel setCurrentView={setCurrentView} />
+        <RiskAnalysis />
+      </div>
+    </div>
+  );
+}
+
+/* ─── PERFORMANCE CHART ───────────────────────────────────────── */
+
+function CustomTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const monthIdx = label as number;
+  const year = 2004 + Math.floor(monthIdx / 12);
+  const month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][monthIdx % 12];
+  return (
+    <div className="bg-slate-900/95 border border-slate-700 rounded-xl p-3 text-sm">
+      <p className="text-slate-400 text-xs mb-1">{month} {year}</p>
+      <p className="text-rose-300">Your Strategy: ${payload[0]?.value?.toLocaleString()}</p>
+      <p className="text-emerald-300">S&P 500: ${payload[1]?.value?.toLocaleString()}</p>
+    </div>
+  );
+}
+
+function PerformanceChart({ data }: { data: any[] }) {
+  const annotations = [
+    { icon: ArrowDownLeft, color: 'text-rose-400', label: 'Oct 2008: -38%' },
+    { icon: ArrowUpRight, color: 'text-emerald-400', label: 'Mar 2013: +28%' },
+    { icon: TrendingDown, color: 'text-rose-400', label: 'Mar 2020: -24%' },
+    { icon: TrendingUp, color: 'text-emerald-400', label: 'Dec 2023: +26%' },
+  ];
+
+  return (
+    <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h2 className="text-slate-100 font-semibold text-lg">Portfolio Value Over Time</h2>
+          <p className="text-slate-400 text-sm">Monthly equity curve · 240 data points</p>
+        </div>
+        <div className="flex gap-2">
+          <span className="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-2.5 py-1 rounded-full">Your Strategy</span>
+          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-full">S&P 500 (Buy & Hold)</span>
+        </div>
+      </div>
+      <div className="mt-6 h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="sp500Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+            <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v: number) => {
+              if (v % 24 === 0) {
+                const labels = ["'04","'06","'08","'10","'12","'14","'16","'18","'20","'22","'24"];
+                return labels[v / 24] || '';
+              }
+              return '';
+            }} interval={23} />
+            <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`} />
+            <Tooltip content={<CustomTooltip />} />
+            <Area type="monotone" dataKey="user" stroke="#f43f5e" strokeWidth={2} fill="url(#userGradient)" fillOpacity={1} />
+            <Area type="monotone" dataKey="sp500" stroke="#10b981" strokeWidth={2.5} fill="url(#sp500Gradient)" fillOpacity={1} />
+            <ReferenceLine x={54} stroke="#f43f5e" strokeDasharray="4 4" strokeOpacity={0.5} label={{ value: "2008 Crisis", fill: "#f43f5e", fontSize: 11 }} />
+            <ReferenceLine x={144} stroke="#6366f1" strokeDasharray="4 4" strokeOpacity={0.5} label={{ value: "COVID", fill: "#818cf8", fontSize: 11 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap gap-3 mt-4">
+        {annotations.map((a, i) => (
+          <div key={i} className="bg-slate-800/60 border border-slate-700/40 rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-indigo-500/40 text-xs text-slate-300 transition-all duration-300">
+            <a.icon size={14} className={a.color} />
+            <span>{a.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── TRADE HISTORY ───────────────────────────────────────────── */
+
+function TradeHistoryTable() {
+  return (
+    <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <List size={18} className="text-indigo-400" />
+        <h2 className="text-slate-100 font-semibold text-lg">Trade History</h2>
+        <span className="bg-indigo-600/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full ml-2">214 trades</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wide">
+              {['Date','Action','Price','Shares','P&L','Return','Cumulative'].map(h => (
+                <th key={h} className="px-3 py-2.5 text-left font-medium">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tradeHistory.map((row, i) => (
+              <tr key={i} className={`border-t border-slate-800/50 ${i % 2 === 0 ? 'bg-slate-800/20' : ''}`}>
+                <td className="px-3 py-2.5 text-slate-300">{row.date}</td>
+                <td className={`px-3 py-2.5 font-medium ${row.action === 'BUY' ? 'text-indigo-400' : 'text-amber-400'}`}>{row.action}</td>
+                <td className="px-3 py-2.5 text-slate-300">{row.price}</td>
+                <td className="px-3 py-2.5 text-slate-300">{row.shares}</td>
+                <td className={`px-3 py-2.5 font-medium ${row.positive === true ? 'text-emerald-400' : row.positive === false ? 'text-rose-400' : 'text-slate-500'}`}>{row.pnl}</td>
+                <td className={`px-3 py-2.5 ${row.positive === true ? 'text-emerald-400' : row.positive === false ? 'text-rose-400' : 'text-slate-500'}`}>{row.ret}</td>
+                <td className="px-3 py-2.5 text-slate-300">{row.cum}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-slate-500 text-xs">Showing 8 of 214 trades</span>
+        <span className="text-indigo-400 text-xs cursor-pointer hover:text-indigo-300 transition-colors">View All</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── PERFORMANCE METRICS ─────────────────────────────────────── */
+
+function PerformanceMetrics({ metrics, tab, setTab }: any) {
+  const isStrategy = tab === 'strategy';
+  const rows = [
+    { label: 'Total Return', value: metrics.totalReturn, color: isStrategy ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-bold' },
+    { label: 'Annualized Return', value: metrics.annualizedReturn, color: isStrategy ? 'text-rose-300' : 'text-emerald-300' },
+    { label: 'Max Drawdown', value: metrics.maxDrawdown, color: 'text-rose-400', note: '(During 2008-09 crisis)' },
+    { label: 'Win Rate', value: metrics.winRate, color: 'text-slate-100' },
+    { label: 'Sharpe Ratio', value: metrics.sharpeRatio, color: 'text-slate-100' },
+    { label: 'Avg Trade Duration', value: metrics.avgTradeDuration, color: 'text-slate-300' },
+    { label: 'Total Trades', value: metrics.totalTrades, color: 'text-slate-300' },
+    { label: 'Trading Fees Paid', value: metrics.tradingFees, color: metrics.tradingFees.startsWith('-') ? 'text-rose-400' : 'text-slate-300' },
+  ];
+
+  return (
+    <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Activity size={18} className="text-indigo-400" />
+        <h2 className="text-slate-100 font-semibold">Performance Metrics</h2>
+      </div>
+      <div className="flex gap-2 mb-4">
+        {(['strategy', 'sp500'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-all ${tab === t ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-400 border border-transparent hover:text-slate-200'}`}>
+            {t === 'strategy' ? 'Your Strategy' : 'S&P 500'}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-0">
+        {rows.map((r, i) => (
+          <div key={i} className={`flex justify-between items-center py-3 ${i < rows.length - 1 ? 'border-b border-slate-800' : ''}`}>
+            <span className="text-slate-400 text-sm flex items-center gap-1">
+              {r.label}
+              {r.label === 'Total Return' && !isStrategy && <Info size={12} className="text-slate-500" />}
+            </span>
+            <div className="text-right">
+              <span className={`text-sm ${r.color}`}>{r.value}</span>
+              {r.note && <p className="text-slate-500 text-xs">{r.note}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4">
+        <div className="flex gap-2">
+          <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="text-amber-200/80 text-xs leading-relaxed">
+            After fees and taxes, your strategy returned +47% vs the S&P's +332% over 20 years.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── VERDICT ─────────────────────────────────────────────────── */
+
+function VerdictPanel({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
+  return (
+    <div className="bg-gradient-to-br from-slate-900 to-slate-900 border-2 border-indigo-500/30 shadow-[0_0_40px_rgba(99,102,241,0.12)] rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Gavel size={16} className="text-indigo-400" />
+        <span className="text-indigo-400 text-xs font-bold tracking-widest">THE VERDICT</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4">
+          <p className="text-rose-400 text-xs font-bold tracking-wider mb-2">YOUR STRATEGY</p>
+          <p className="text-3xl font-bold text-rose-300">+47%</p>
+          <p className="text-slate-500 text-xs">Total Return</p>
+          <TrendingDown size={18} className="text-rose-400 mt-2" />
+        </div>
+        <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-xl p-4 relative">
+          <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">WINNER</span>
+          <p className="text-emerald-400 text-xs font-bold tracking-wider mb-2">S&P 500</p>
+          <p className="text-3xl font-bold text-emerald-300">+332%</p>
+          <p className="text-slate-500 text-xs">Total Return</p>
+          <TrendingUp size={18} className="text-emerald-400 mt-2" />
+        </div>
+      </div>
+      <p className="text-slate-300 text-sm text-center mt-4 leading-relaxed">
+        The index beat your strategy by <span className="text-indigo-400 font-semibold">285 percentage points</span> over 20 years—without a single trade.
+      </p>
+      <p className="text-indigo-400 text-sm cursor-pointer mt-2 text-center hover:text-indigo-300 transition-colors" onClick={() => setCurrentView('learn')}>
+        Learn why →
+      </p>
+    </div>
+  );
+}
+
+/* ─── RISK ANALYSIS ───────────────────────────────────────────── */
+
+function RiskAnalysis() {
+  const badges = ['Beta: 0.89', 'Alpha: -1.2%', 'VaR (5%): -3.8%'];
+  return (
+    <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <PieChart size={18} className="text-indigo-400" />
+        <h2 className="text-slate-100 font-semibold">Risk Analysis</h2>
+      </div>
+      <div className="flex justify-center">
+        <ResponsiveContainer width={220} height={220}>
+          <RadarChart data={radarData}>
+            <PolarGrid stroke="rgba(255,255,255,0.08)" />
+            <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+            <PolarRadiusAxis tick={false} domain={[0, 100]} axisLine={false} />
+            <Radar name="Strategy" dataKey="strategy" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} />
+            <Radar name="S&P 500" dataKey="sp500" stroke="#10b981" fill="#10b981" fillOpacity={0.2} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mt-2">
+        {badges.map(b => (
+          <span key={b} className="text-slate-400 text-xs text-center bg-slate-800/50 rounded-lg py-1.5 px-1">{b}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── LEARN VIEW ──────────────────────────────────────────────── */
+
+const filterTabs = ['All', 'Indicators', 'Risk', 'Strategy', 'Market Basics'];
+
+function LearnView({ concepts, filter, setFilter, search, setSearch, expandedCard, setExpandedConcept, setCurrentView }: any) {
+  return (
+    <>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <h1 className="text-3xl font-bold text-slate-100" style={{ fontFamily: 'Syne' }}>Learning Hub</h1>
+        <p className="text-slate-400 mt-1">Understand the concepts behind your strategy—in plain English.</p>
+        <div className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 w-full max-w-md flex items-center gap-3 mt-4">
+          <Search size={18} className="text-slate-500" />
+          <input className="bg-transparent text-slate-200 placeholder-slate-500 outline-none w-full text-sm" placeholder="Search concepts..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="flex gap-2 flex-wrap mt-4 mb-8">
+          {filterTabs.map(t => (
+            <button key={t} onClick={() => setFilter(t)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${filter === t ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 max-w-7xl mx-auto px-6 pb-12">
+        {concepts.map((card: any) => {
+          const Icon = iconMap[card.icon] || TrendingUp;
+          const diffColor = card.difficulty === 'Beginner' ? 'bg-emerald-500/15 text-emerald-400' : card.difficulty === 'Intermediate' ? 'bg-amber-500/15 text-amber-400' : 'bg-rose-500/15 text-rose-400';
+          return (
+            <div key={card.id} onClick={() => setExpandedConcept(card.id)}
+              className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.08)] transition-all duration-300 cursor-pointer group flex flex-col">
+              <div className="flex justify-between items-start">
+                <div className={`rounded-xl p-3 inline-flex mb-4 ${card.iconBg}`}>
+                  <Icon size={20} className="text-slate-200" strokeWidth={1.5} />
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${diffColor}`}>{card.difficulty}</span>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-2">{card.title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed flex-1">{card.body}</p>
+              <div className="flex flex-wrap gap-1.5 mt-4">
+                {card.tags.map((tag: string) => (
+                  <span key={tag} className="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded-full">{tag}</span>
+                ))}
+              </div>
+              <div className="mt-4 text-indigo-400 text-sm group-hover:text-indigo-300 flex items-center gap-1 font-medium">
+                Read More <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Slide-out detail panel */}
+      {expandedCard && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setExpandedConcept(null)} />
+          <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-slate-900 border-l border-slate-700 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out translate-x-0 flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                {(() => { const Icon = iconMap[expandedCard.icon] || TrendingUp; return <Icon size={22} className="text-indigo-400" />; })()}
+                <h2 className="text-xl font-bold text-slate-100">{expandedCard.title}</h2>
+              </div>
+              <button onClick={() => setExpandedConcept(null)} className="text-slate-400 hover:text-slate-200 transition-colors p-1"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="flex items-center gap-3 mb-6">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${expandedCard.difficulty === 'Beginner' ? 'bg-emerald-500/15 text-emerald-400' : expandedCard.difficulty === 'Intermediate' ? 'bg-amber-500/15 text-amber-400' : 'bg-rose-500/15 text-rose-400'}`}>{expandedCard.difficulty}</span>
+                <span className="text-slate-500 text-xs">~3 min read</span>
+              </div>
+              <div className="space-y-4">
+                {expandedCard.fullText.map((p: string, i: number) => (
+                  <p key={i} className="text-slate-300 text-sm leading-7">{p}</p>
+                ))}
+              </div>
+              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4 mt-6">
+                <div className="flex gap-2">
+                  <Lightbulb size={16} className="text-indigo-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-indigo-200 text-sm font-medium">{expandedCard.takeaway}</p>
+                </div>
+              </div>
+              {expandedCard.related && (
+                <div className="mt-6">
+                  <p className="text-slate-400 text-sm font-medium mb-2">Related Concepts</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {expandedCard.related.map((rid: string) => {
+                      const rc = conceptCards.find(c => c.id === rid);
+                      return rc ? (
+                        <button key={rid} onClick={() => setExpandedConcept(rid)} className="bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-full hover:bg-slate-700 transition-colors">{rc.title}</button>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+              <button onClick={() => { setExpandedConcept(null); setCurrentView('results'); }}
+                className="w-full mt-8 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition-colors text-sm">
+                View Results →
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
