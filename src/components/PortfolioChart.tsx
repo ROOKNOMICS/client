@@ -20,6 +20,7 @@ interface Props {
 }
 
 export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
+  
 
   // Merge both series into one array by date
   const combined = portfolioSeries.map((day, i) => ({
