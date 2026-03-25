@@ -2,7 +2,8 @@ import { PortfolioChart } from './PortfolioChart'
 import { TradeMarkerChart } from './TradeMarkerChart'
 import { MetricsComparisonChart } from './MetricsComparisonChart'
 import { Trophy, AlertTriangle } from 'lucide-react'
-
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/store'
 interface SeriesDay { date: string; value: number }
 interface Trade { date: string; action: 'BUY' | 'SELL'; price: number }
 interface Metrics { totalReturn: number; maxDrawdown: number; sharpeRatio: number; totalTrades: number }
@@ -27,6 +28,7 @@ export function ResultsDashboard({
   const weWon = portfolioMetrics.totalReturn > benchmarkMetrics.totalReturn
 
   return (
+  
     <div className="max-w-6xl mx-auto px-6 py-12">
       {/* Verdict banner */}
       <div className={`p-6 md:p-8 rounded-[2.5rem] mb-10 flex flex-col md:flex-row md:items-center gap-6 border shadow-sm ${weWon ? 'bg-emerald-50 border-emerald-200/60' : 'bg-rose-50 border-rose-200/60'}`}>
