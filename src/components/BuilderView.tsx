@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { apiRequest } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 
 interface BuilderViewProps {
@@ -36,6 +37,8 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
   const [stopLossPercent, setStopLossPercent] = useState(10);
   const [takeProfit, setTakeProfit] = useState(false);
   const [takeProfitPercent, setTakeProfitPercent] = useState(20);
+
+  
 
   const handleRunBacktest = () => {
     setCurrentView('results');
