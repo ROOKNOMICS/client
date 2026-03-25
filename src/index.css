@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
@@ -35,6 +35,21 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ROOKNOMICS Design Tokens */
+    --brand: #5b4cf0;
+    --brand-light: #ede9fe;
+    --profit: #0d9e6e;
+    --profit-light: #d1fae5;
+    --loss: #e1294b;
+    --loss-light: #ffe4e8;
+    --text-primary: #111110;
+    --text-secondary: #6b6b6b;
+    --text-muted: #a8a8a8;
+    --border-subtle: #e8e7e4;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.09);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
   }
 }
 
@@ -62,4 +77,23 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
+}
+
+/* Marquee animation for testimonials */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee var(--duration, 40s) linear infinite;
+}
+
+/* Font utilities */
+.font-display {
+  font-family: 'Instrument Serif', serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
 }

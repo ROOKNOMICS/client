@@ -47,11 +47,11 @@ export function TradeMarkerChart({ portfolioSeries, tradeLog }: Props) {
     <ResponsiveContainer width="100%" height={350}>
       <ComposedChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
 
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
 
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 12, fill: '#64748b' }}
+          tick={{ fontSize: 11, fill: '#a8a8a8', fontFamily: 'Inter' }}
           axisLine={false}
           tickLine={false}
           dy={15}
@@ -60,7 +60,7 @@ export function TradeMarkerChart({ portfolioSeries, tradeLog }: Props) {
 
         <YAxis
           tickFormatter={(value) => `$${value.toLocaleString()}`}
-          tick={{ fontSize: 12, fill: '#64748b' }}
+          tick={{ fontSize: 11, fill: '#a8a8a8', fontFamily: 'Inter' }}
           axisLine={false}
           tickLine={false}
           dx={-10}
@@ -71,17 +71,17 @@ export function TradeMarkerChart({ portfolioSeries, tradeLog }: Props) {
             if (!active || !payload?.length) return null
             const d = payload[0].payload
             return (
-              <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-4 min-w-[200px]">
-                <p className="text-slate-500 text-xs font-semibold mb-3 uppercase tracking-wider">{d.date}</p>
-                <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-md)] rounded-xl p-3 min-w-[200px]">
+                <p className="text-[#a8a8a8] text-xs font-semibold mb-2 uppercase tracking-wider">{d.date}</p>
+                <div className="flex items-center justify-between gap-4 mb-2">
                   <span className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                    <span className="text-slate-700 text-sm font-medium">Portfolio Val</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#e1294b]" />
+                    <span className="text-gray-700 text-[13px]">Portfolio Val</span>
                   </span>
-                  <span className="text-slate-900 font-bold text-sm">${d.value.toLocaleString()}</span>
+                  <span className="font-mono text-gray-900 font-semibold text-[13px]">${d.value.toLocaleString()}</span>
                 </div>
                 {d.trade && (
-                  <div className={`mt-2 inline-flex items-center justify-center w-full px-3 py-2 rounded-lg text-xs font-bold tracking-wide ${d.trade.action === 'BUY' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                  <div className={`mt-2 inline-flex items-center justify-center w-full px-3 py-2 rounded-lg text-[11px] font-bold tracking-wide ${d.trade.action === 'BUY' ? 'bg-[#d1fae5] text-[#0d9e6e] border border-green-100' : 'bg-[#ffe4e8] text-[#e1294b] border border-red-100'}`}>
                     {d.trade.action} SIGNAL AT ${d.trade.price.toFixed(2)}
                   </div>
                 )}
@@ -94,7 +94,7 @@ export function TradeMarkerChart({ portfolioSeries, tradeLog }: Props) {
         <Line
           type="monotone"
           dataKey="value"
-          stroke="#6366f1"
+          stroke="#e1294b"
           strokeWidth={2}
           dot={false}
           activeDot={false}
@@ -107,8 +107,8 @@ export function TradeMarkerChart({ portfolioSeries, tradeLog }: Props) {
             <Cell
               key={index}
               fill={
-                entry.trade?.action === 'BUY'  ? '#10b981' :   // emerald-500 for buy
-                entry.trade?.action === 'SELL' ? '#f43f5e' :   // rose-500 for sell
+                entry.trade?.action === 'BUY'  ? '#0d9e6e' :   // profit green for buy
+                entry.trade?.action === 'SELL' ? '#e1294b' :   // loss red for sell
                 'transparent'
               }
             />

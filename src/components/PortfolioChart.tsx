@@ -32,11 +32,11 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
     <ResponsiveContainer width="100%" height={400}>
       <LineChart data={combined} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
         
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
 
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 12, fill: '#64748b' }}
+          tick={{ fontSize: 11, fill: '#a8a8a8', fontFamily: 'Inter' }}
           axisLine={false}
           tickLine={false}
           dy={15}
@@ -47,7 +47,7 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
         <YAxis
           // Format as dollars
           tickFormatter={(value) => `$${value.toLocaleString()}`}
-          tick={{ fontSize: 12, fill: '#64748b' }}
+          tick={{ fontSize: 11, fill: '#a8a8a8', fontFamily: 'Inter' }}
           axisLine={false}
           tickLine={false}
           dx={-10}
@@ -57,23 +57,23 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
             return (
-              <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-4">
-                <p className="text-slate-500 text-xs font-semibold mb-3 uppercase tracking-wider">{label}</p>
-                <div className="space-y-2">
+              <div className="bg-white border border-gray-100 shadow-[var(--shadow-md)] rounded-xl p-3">
+                <p className="text-[#a8a8a8] text-xs font-semibold mb-2 uppercase tracking-wider">{label}</p>
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-6">
                     <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                      <span className="text-slate-700 text-sm font-medium">Your Strategy</span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#e1294b]" />
+                      <span className="text-gray-700 text-[13px]">Your Strategy</span>
                     </span>
-                    <span className="text-slate-900 font-bold text-sm">${payload[0].value.toLocaleString()}</span>
+                    <span className="font-mono text-[#e1294b] font-semibold text-[13px]">${payload[0].value.toLocaleString()}</span>
                   </div>
                   {payload[1] && (
                     <div className="flex items-center justify-between gap-6">
                       <span className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                        <span className="text-slate-700 text-sm font-medium">S&P 500</span>
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#0d9e6e]" />
+                        <span className="text-gray-700 text-[13px]">S&P 500</span>
                       </span>
-                      <span className="text-slate-900 font-bold text-sm">${payload[1].value.toLocaleString()}</span>
+                      <span className="font-mono text-[#0d9e6e] font-semibold text-[13px]">${payload[1].value.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
@@ -85,30 +85,29 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
         <Legend 
           iconType="circle"
           wrapperStyle={{ paddingTop: '20px' }}
-          formatter={(value) => <span className="text-slate-600 text-sm font-medium">{value === 'Your strategy' ? 'Your strategy' : 'S&P 500 index'}</span>}
+          formatter={(value) => <span className="text-gray-600 text-sm font-medium">{value === 'Your strategy' ? 'Your strategy' : 'S&P 500 index'}</span>}
         />
 
-        {/* Your strategy line — indigo */}
+        {/* Your strategy line — loss red */}
         <Line
           type="monotone"
           dataKey="strategy"
-          stroke="#6366f1"
-          strokeWidth={3}
+          stroke="#e1294b"
+          strokeWidth={2}
           dot={false}
-          activeDot={{ r: 6, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
+          activeDot={{ r: 6, fill: '#e1294b', stroke: '#fff', strokeWidth: 2 }}
           name="Your strategy"
         />
 
-        {/* S&P 500 benchmark line — slate */}
+        {/* S&P 500 benchmark line — profit green */}
         <Line
           type="monotone"
           dataKey="benchmark"
-          stroke="#94a3b8"
-          strokeWidth={2}
+          stroke="#0d9e6e"
+          strokeWidth={2.5}
           dot={false}
-          activeDot={{ r: 4, fill: '#94a3b8', stroke: '#fff', strokeWidth: 1 }}
+          activeDot={{ r: 4, fill: '#0d9e6e', stroke: '#fff', strokeWidth: 1 }}
           name="S&P 500 index"
-          strokeDasharray="6 6"
         />
 
       </LineChart>
