@@ -70,3 +70,19 @@ export const authApi = {
   getMe: () =>
     apiRequest<{ user: AuthUser }>('/auth/me'),
 };
+
+
+export const googleAuth = async (data: {
+  googleId: string;
+  email: string;
+  name: string;
+  avatar?: string;
+}) => {
+  const res = await fetch(`${BASE_URL}/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+};
