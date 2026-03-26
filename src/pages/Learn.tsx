@@ -21,20 +21,20 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Award, DollarSign, Droplets, Brain, AlertCircle, X,
 };
 
-// ── Category colours ─────────────────────────────────────────────────────────
-const CAT_COLORS: Record<GlossaryCategory, { bg: string; icon: string; pill: string; pillText: string }> = {
-  indicator: { bg: 'bg-[#ede9fe]', icon: 'text-[#5b4cf0]', pill: 'bg-[#ede9fe]', pillText: 'text-[#5b4cf0]' },
-  risk: { bg: 'bg-[#ffe4e8]', icon: 'text-[#e1294b]', pill: 'bg-[#ffe4e8]', pillText: 'text-[#e1294b]' },
-  strategy: { bg: 'bg-[#d1fae5]', icon: 'text-[#0d9e6e]', pill: 'bg-[#d1fae5]', pillText: 'text-[#0d9e6e]' },
-  market: { bg: 'bg-[#e0f2fe]', icon: 'text-sky-700', pill: 'bg-[#e0f2fe]', pillText: 'text-sky-700' },
-  metric: { bg: 'bg-[#fef3c7]', icon: 'text-amber-600', pill: 'bg-[#fef3c7]', pillText: 'text-amber-600' },
-  psychology: { bg: 'bg-[#fdf4ff]', icon: 'text-purple-700', pill: 'bg-[#fdf4ff]', pillText: 'text-purple-700' },
+// ── Dark category colours ─────────────────────────────────────────────────────
+const CAT_COLORS: Record<GlossaryCategory, { bg: string; iconColor: string; pillBg: string; pillColor: string; pillBorder: string }> = {
+  indicator: { bg: 'rgba(99,102,241,0.12)', iconColor: '#818CF8', pillBg: 'rgba(99,102,241,0.10)', pillColor: '#818CF8', pillBorder: 'rgba(99,102,241,0.22)' },
+  risk:      { bg: 'rgba(244,63,94,0.10)',  iconColor: '#F87171', pillBg: 'rgba(244,63,94,0.08)',  pillColor: '#F87171', pillBorder: 'rgba(244,63,94,0.22)' },
+  strategy:  { bg: 'rgba(16,185,129,0.10)', iconColor: '#10B981', pillBg: 'rgba(16,185,129,0.08)', pillColor: '#10B981', pillBorder: 'rgba(16,185,129,0.22)' },
+  market:    { bg: 'rgba(56,189,248,0.10)', iconColor: '#38BDF8', pillBg: 'rgba(56,189,248,0.08)', pillColor: '#38BDF8', pillBorder: 'rgba(56,189,248,0.22)' },
+  metric:    { bg: 'rgba(251,191,36,0.10)', iconColor: '#FBBF24', pillBg: 'rgba(251,191,36,0.08)', pillColor: '#FBBF24', pillBorder: 'rgba(251,191,36,0.22)' },
+  psychology:{ bg: 'rgba(167,139,250,0.10)',iconColor: '#A78BFA', pillBg: 'rgba(167,139,250,0.08)',pillColor: '#A78BFA', pillBorder: 'rgba(167,139,250,0.22)' },
 };
 
-const DIFF_COLORS: Record<string, string> = {
-  beginner: 'bg-[#d1fae5] text-[#0d9e6e]',
-  intermediate: 'bg-[#fef3c7] text-amber-700',
-  advanced: 'bg-[#ffe4e8] text-[#e1294b]',
+const DIFF_DARK: Record<string, { bg: string; color: string; border: string }> = {
+  beginner:     { bg: 'rgba(16,185,129,0.08)',  color: '#10B981', border: 'rgba(16,185,129,0.22)' },
+  intermediate: { bg: 'rgba(251,191,36,0.08)',  color: '#FBBF24', border: 'rgba(251,191,36,0.22)' },
+  advanced:     { bg: 'rgba(244,63,94,0.08)',   color: '#F87171', border: 'rgba(244,63,94,0.22)' },
 };
 
 const CATEGORY_CHIPS = [
@@ -59,26 +59,24 @@ const cardItem = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, t
 const dropDown = { hidden: { opacity: 0, y: -8, scale: 0.97 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.15 } }, exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.1 } } };
 const wikiCard = { hidden: { opacity: 0, scale: 0.98 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } } };
 
-// ── Skeleton card ─────────────────────────────────────────────────────────────
+// ── Dark Skeleton card ─────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 20 }}>
       <style>{`
-        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        .sk { background:linear-gradient(90deg,#f8fafc 25%,#f1f5f9 50%,#f8fafc 75%);background-size:200% 100%;animation:shimmer 1.5s infinite; }
+        @keyframes shimmer-dark { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .sk-dark { background:linear-gradient(90deg,#1a1a1a 25%,#222 50%,#1a1a1a 75%);background-size:200% 100%;animation:shimmer-dark 1.5s infinite; border-radius: 4px; }
       `}</style>
-      <div className="flex justify-between items-center">
-        <div className="w-11 h-11 sk rounded-xl" />
-        <div className="w-20 h-5 sk rounded-full" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="sk-dark" style={{ width: 40, height: 40, borderRadius: 8 }} />
+        <div className="sk-dark" style={{ width: 72, height: 18 }} />
       </div>
-      <div className="h-5 w-3/4 sk rounded-lg" />
-      <div className="h-4 w-full sk rounded" />
-      <div className="h-4 w-5/6 sk rounded" />
-      <div className="h-4 w-4/6 sk rounded" />
-      <div className="flex gap-2 mt-2">
-        <div className="h-4 w-14 sk rounded-full" />
-        <div className="h-4 w-14 sk rounded-full" />
-        <div className="h-4 w-14 sk rounded-full" />
+      <div className="sk-dark" style={{ height: 16, width: '70%', marginBottom: 10 }} />
+      <div className="sk-dark" style={{ height: 13, width: '100%', marginBottom: 6 }} />
+      <div className="sk-dark" style={{ height: 13, width: '85%', marginBottom: 6 }} />
+      <div className="sk-dark" style={{ height: 13, width: '65%', marginBottom: 14 }} />
+      <div style={{ display: 'flex', gap: 6 }}>
+        {[56, 48, 60].map((w, i) => <div key={i} className="sk-dark" style={{ height: 20, width: w }} />)}
       </div>
     </div>
   );
@@ -87,6 +85,7 @@ function SkeletonCard() {
 // ── Concept Card ──────────────────────────────────────────────────────────────
 function ConceptCard({ term, onClick }: { term: GlossaryTerm; onClick: () => void }) {
   const colors = CAT_COLORS[term.category];
+  const diff = DIFF_DARK[term.difficulty];
   const IconComp = ICON_MAP[term.icon] ?? TrendingUp;
   const firstTwo = term.definition.split('. ').slice(0, 2).join('. ') + '.';
 
@@ -94,18 +93,35 @@ function ConceptCard({ term, onClick }: { term: GlossaryTerm; onClick: () => voi
     <motion.div
       variants={cardItem}
       onClick={onClick}
-      className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#c4bafc] hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col gap-3"
+      style={{
+        background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 10,
+        padding: 20,
+        cursor: 'pointer',
+        display: 'flex', flexDirection: 'column', gap: 12,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        transition: 'border-color 200ms ease, box-shadow 200ms ease',
+      }}
+      onMouseEnter={(e: any) => {
+        e.currentTarget.style.borderColor = `${colors.pillBorder}`;
+        e.currentTarget.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 24px ${colors.pillBg}`;
+      }}
+      onMouseLeave={(e: any) => {
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+        e.currentTarget.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.06)';
+      }}
     >
       {/* Icon + badges row */}
-      <div className="flex items-start justify-between">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.bg}`}>
-          <IconComp size={20} className={colors.icon} strokeWidth={2} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={{ width: 40, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: colors.bg }}>
+          <IconComp size={18} color={colors.iconColor} strokeWidth={1.8} />
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${colors.pill} ${colors.pillText}`}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: colors.pillBg, color: colors.pillColor, border: `1px solid ${colors.pillBorder}`, letterSpacing: '0.06em', textTransform: 'capitalize' }}>
             {term.category}
           </span>
-          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${DIFF_COLORS[term.difficulty]}`}>
+          <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: diff.bg, color: diff.color, border: `1px solid ${diff.border}`, letterSpacing: '0.06em', textTransform: 'capitalize' }}>
             {term.difficulty}
           </span>
         </div>
@@ -113,25 +129,25 @@ function ConceptCard({ term, onClick }: { term: GlossaryTerm; onClick: () => voi
 
       {/* Term name */}
       <div>
-        <p className="font-bold text-gray-900 text-[17px] leading-snug">{term.term}</p>
-        <p className="text-gray-400 text-[12px] mt-0.5">{term.fullName}</p>
+        <p style={{ fontWeight: 600, fontSize: 15, color: 'rgba(255,255,255,0.88)', letterSpacing: '-0.01em', lineHeight: 1.3 }}>{term.term}</p>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', marginTop: 3 }}>{term.fullName}</p>
       </div>
 
       {/* Definition preview */}
-      <p className="text-gray-500 text-[13px] line-clamp-3 leading-relaxed flex-1">{firstTwo}</p>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, flex: 1 }} className="line-clamp-3">{firstTwo}</p>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-1.5">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
         {term.tags.slice(0, 3).map((tag) => (
-          <span key={tag} className="bg-gray-100 text-gray-500 text-[11px] px-2 py-0.5 rounded-full">{tag}</span>
+          <span key={tag} style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)', fontSize: 10, padding: '2px 8px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.06)' }}>{tag}</span>
         ))}
       </div>
 
       {/* Read more row */}
-      <div className="flex items-center justify-between mt-auto pt-1 border-t border-gray-100">
-        <span className="text-[#5b4cf0] text-[13px] font-semibold">Read more →</span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors.bg}`}>
-          <IconComp size={14} className={colors.icon} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <span style={{ color: colors.pillColor, fontSize: 12, fontWeight: 500 }}>Read more →</span>
+        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.bg }}>
+          <IconComp size={12} color={colors.iconColor} />
         </div>
       </div>
     </motion.div>
@@ -140,10 +156,7 @@ function ConceptCard({ term, onClick }: { term: GlossaryTerm; onClick: () => voi
 
 // ── Detail Panel ──────────────────────────────────────────────────────────────
 function DetailPanel({
-  term,
-  onClose,
-  onNavigate,
-  onNavigateToBuilder,
+  term, onClose, onNavigate, onNavigateToBuilder,
 }: {
   term: GlossaryTerm;
   onClose: () => void;
@@ -151,6 +164,7 @@ function DetailPanel({
   onNavigateToBuilder: () => void;
 }) {
   const colors = CAT_COLORS[term.category];
+  const diff = DIFF_DARK[term.difficulty];
   const IconComp = ICON_MAP[term.icon] ?? TrendingUp;
 
   const relatedTerms = term.related
@@ -161,7 +175,7 @@ function DetailPanel({
     <>
       {/* Overlay */}
       <motion.div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', zIndex: 40 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -170,67 +184,75 @@ function DetailPanel({
 
       {/* Panel */}
       <motion.div
-        className="fixed right-0 top-0 h-full w-full max-w-[480px] bg-white border-l border-gray-100 z-50 shadow-[-8px_0_40px_rgba(0,0,0,0.1)] overflow-y-auto"
+        style={{
+          position: 'fixed', right: 0, top: 0, height: '100%',
+          width: '100%', maxWidth: 480,
+          background: 'linear-gradient(180deg,#151515 0%,#0F0F0F 100%)',
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          zIndex: 50,
+          boxShadow: '-12px 0 60px rgba(0,0,0,0.60)',
+          overflowY: 'auto',
+        }}
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
         {/* Sticky header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.bg}`}>
-                <IconComp size={18} className={colors.icon} />
+        <div style={{ position: 'sticky', top: 0, background: 'rgba(15,15,15,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: colors.bg }}>
+                <IconComp size={16} color={colors.iconColor} />
               </div>
-              <span className="font-bold text-gray-900 text-lg">{term.term}</span>
+              <span style={{ fontWeight: 600, fontSize: 16, color: 'rgba(255,255,255,0.90)' }}>{term.term}</span>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
+              style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', color: 'rgba(255,255,255,0.50)' }}
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
-          <div className="flex items-center gap-2 mt-2 ml-1">
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${colors.pill} ${colors.pillText}`}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: colors.pillBg, color: colors.pillColor, border: `1px solid ${colors.pillBorder}`, letterSpacing: '0.06em', textTransform: 'capitalize' }}>
               {term.category}
             </span>
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${DIFF_COLORS[term.difficulty]}`}>
+            <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: diff.bg, color: diff.color, border: `1px solid ${diff.border}`, letterSpacing: '0.06em', textTransform: 'capitalize' }}>
               {term.difficulty}
             </span>
           </div>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 space-y-6">
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* What is it */}
           <section>
-            <p className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-2">What Is It?</p>
-            <p className="text-gray-700 text-[14px] leading-[1.75]">{term.definition}</p>
+            <p style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>What Is It?</p>
+            <p style={{ color: 'rgba(255,255,255,0.70)', fontSize: 13, lineHeight: 1.75 }}>{term.definition}</p>
           </section>
 
           {/* How to use */}
           <section>
-            <p className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-2">How To Use It</p>
-            <div className="bg-[#ede9fe] rounded-r-xl rounded-bl-xl border-l-4 border-[#5b4cf0] p-4">
-              <p className="text-[#3c3489] text-[13px] leading-relaxed">{term.howToUse}</p>
+            <p style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>How To Use It</p>
+            <div style={{ background: colors.bg, borderLeft: `3px solid ${colors.pillColor}`, borderRadius: '0 8px 8px 0', padding: 16 }}>
+              <p style={{ color: colors.pillColor, fontSize: 13, lineHeight: 1.65 }}>{term.howToUse}</p>
             </div>
           </section>
 
           {/* Example */}
           <section>
-            <p className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-2">Example</p>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-600 text-[13px] leading-relaxed font-mono">{term.example}</p>
+            <p style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Example</p>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.65, fontFamily: 'JetBrains Mono, monospace' }}>{term.example}</p>
             </div>
           </section>
 
           {/* Related concepts */}
           {relatedTerms.length > 0 && (
             <section>
-              <p className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-2">Related Concepts</p>
-              <div className="flex flex-col gap-2">
+              <p style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Related Concepts</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {relatedTerms.map((rt) => {
                   const rc = CAT_COLORS[rt.category];
                   const RIcon = ICON_MAP[rt.icon] ?? TrendingUp;
@@ -239,14 +261,23 @@ function DetailPanel({
                     <button
                       key={rt.id}
                       onClick={() => onNavigate(rt)}
-                      className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-3 cursor-pointer hover:bg-[#ede9fe] hover:border-[#c4bafc] transition-all text-left w-full"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: 8, padding: '10px 12px',
+                        cursor: 'pointer', textAlign: 'left', width: '100%',
+                        transition: 'border-color 150ms ease',
+                      }}
+                      onMouseEnter={(e: any) => e.currentTarget.style.borderColor = rc.pillBorder}
+                      onMouseLeave={(e: any) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${rc.bg}`}>
-                        <RIcon size={14} className={rc.icon} />
+                      <div style={{ width: 30, height: 30, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: rc.bg }}>
+                        <RIcon size={13} color={rc.iconColor} />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-semibold text-gray-800">{rt.term}</p>
-                        <p className="text-[11px] text-gray-500 truncate">{snippet}</p>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.80)' }}>{rt.term}</p>
+                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{snippet}</p>
                       </div>
                     </button>
                   );
@@ -257,14 +288,13 @@ function DetailPanel({
 
           {/* Tags */}
           <section>
-            <p className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-2">Tags</p>
-            <div className="flex flex-wrap gap-2">
+            <p style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Tags</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {term.tags.map((tag) => (
-                <span key={tag} className="bg-gray-100 text-gray-500 text-[12px] px-3 py-1 rounded-full">{tag}</span>
+                <span key={tag} style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.45)', fontSize: 11, padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.07)' }}>{tag}</span>
               ))}
             </div>
           </section>
-
         </div>
       </motion.div>
     </>
@@ -290,7 +320,6 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (
@@ -318,7 +347,7 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
     return (
       <>
         {text.slice(0, idx)}
-        <span className="text-[#5b4cf0] font-bold">{text.slice(idx, idx + query.length)}</span>
+        <span style={{ color: '#818CF8', fontWeight: 600 }}>{text.slice(idx, idx + query.length)}</span>
         {text.slice(idx + query.length)}
       </>
     );
@@ -329,7 +358,6 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
   const showWikiResult = !isWikiLoading && wikiResult && !hasResults;
   const showError = !isWikiLoading && !wikiResult && wikiError && !hasResults;
 
-  // Loosely related glossary terms for wiki fallback
   const looselyRelated = wikiResult
     ? glossaryTerms
       .filter((t) =>
@@ -341,26 +369,26 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
 
   return (
     <motion.div
-      className="max-w-7xl mx-auto px-6 py-8"
+      style={{ maxWidth: 1440, margin: '0 auto', padding: '40px 40px 60px', background: '#050505', minHeight: '100vh' }}
       variants={pageVariant}
       initial="hidden"
       animate="visible"
     >
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 32 }}>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Learn</h1>
-          <p className="text-slate-600 mt-1">
+          <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 6 }}>KNOWLEDGE BASE</p>
+          <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.90)', marginBottom: 4 }}>Learn</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.40)' }}>
             Search any market concept, indicator, or strategy — plain English explanations
           </p>
         </div>
-
-        <div className="flex items-center gap-2 sm:flex-shrink-0">
-          <span className="bg-[#ede9fe] text-[#5b4cf0] text-[13px] font-semibold px-3 py-1.5 rounded-full">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ background: 'rgba(99,102,241,0.10)', color: '#818CF8', fontSize: 12, fontWeight: 500, padding: '4px 12px', borderRadius: 4, border: '1px solid rgba(99,102,241,0.18)' }}>
             {totalCount} concepts
           </span>
           {filteredCount !== totalCount && (
-            <span className="bg-gray-100 text-gray-600 text-[13px] font-semibold px-3 py-1.5 rounded-full">
+            <span style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 500, padding: '4px 12px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.08)' }}>
               {filteredCount} showing
             </span>
           )}
@@ -368,20 +396,27 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
       </div>
 
       {/* ── Search bar ── */}
-      <div className="relative mb-4">
-        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 w-full flex items-center gap-3 shadow-sm hover:border-indigo-300 transition-colors focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
-          <Search size={16} className="text-gray-400 flex-shrink-0" />
+      <div style={{ position: 'relative', marginBottom: 20 }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.09)',
+          borderRadius: 8,
+          padding: '11px 16px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          transition: 'border-color 150ms ease',
+        }}>
+          <Search size={15} color="rgba(255,255,255,0.30)" />
           <input
             ref={inputRef}
-            className="bg-transparent text-slate-800 placeholder-slate-400 outline-none w-full text-sm"
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.80)', outline: 'none', width: '100%', fontSize: 13, fontFamily: 'Inter, sans-serif' }}
             placeholder="Search RSI, drawdown, momentum..."
             value={query}
             onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
             onFocus={() => setShowSuggestions(true)}
           />
           {query && (
-            <button onClick={() => { setQuery(''); setShowSuggestions(false); }} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
-              <X size={16} />
+            <button onClick={() => { setQuery(''); setShowSuggestions(false); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.30)', display: 'flex', alignItems: 'center' }}>
+              <X size={14} />
             </button>
           )}
         </div>
@@ -395,16 +430,30 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden"
+              style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+                background: 'linear-gradient(180deg,#1A1A1A 0%,#141414 100%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 8, boxShadow: '0 12px 32px rgba(0,0,0,0.50)',
+                zIndex: 50, overflow: 'hidden',
+              }}
             >
               {suggestions.map((s) => (
                 <button
                   key={s}
                   onMouseDown={() => handleSuggestionClick(s)}
-                  className="w-full px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-3 text-left"
+                  style={{
+                    width: '100%', padding: '11px 16px',
+                    display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    transition: 'background 120ms ease',
+                  }}
+                  onMouseEnter={(e: any) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  onMouseLeave={(e: any) => e.currentTarget.style.background = 'none'}
                 >
-                  <Search size={13} className="text-gray-300 flex-shrink-0" />
-                  <span className="text-gray-700 text-[14px]">{highlightMatch(s)}</span>
+                  <Search size={12} color="rgba(255,255,255,0.20)" />
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.70)' }}>{highlightMatch(s)}</span>
                 </button>
               ))}
             </motion.div>
@@ -413,7 +462,7 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
       </div>
 
       {/* ── Category chips ── */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
         {CATEGORY_CHIPS.map((chip) => {
           const isActive = activeCategory === chip.value;
           const count = getCategoryCount(chip.value);
@@ -421,13 +470,22 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
             <button
               key={chip.value}
               onClick={() => setActiveCategory(chip.value)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all ${isActive
-                  ? 'bg-[#5b4cf0] text-white shadow-[0_2px_8px_rgba(91,76,240,0.3)]'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '6px 14px', borderRadius: 5, fontSize: 12, fontWeight: 500,
+                cursor: 'pointer',
+                background: isActive ? 'rgba(99,102,241,0.14)' : 'rgba(255,255,255,0.04)',
+                color: isActive ? '#818CF8' : 'rgba(255,255,255,0.45)',
+                border: isActive ? '1px solid rgba(99,102,241,0.28)' : '1px solid rgba(255,255,255,0.07)',
+                transition: 'all 150ms ease',
+              }}
             >
               {chip.label}
-              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              <span style={{
+                fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3,
+                background: isActive ? 'rgba(99,102,241,0.20)' : 'rgba(255,255,255,0.06)',
+                color: isActive ? '#818CF8' : 'rgba(255,255,255,0.30)',
+              }}>
                 {count}
               </span>
             </button>
@@ -436,29 +494,28 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
       </div>
 
       {/* ── Results label ── */}
-      <div className="flex items-center gap-2 mb-5 text-[14px]">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13 }}>
         {!query && !activeCategory ? (
           <>
-            <span className="text-slate-600 font-medium">All financial concepts</span>
-            <span className="bg-indigo-50 text-indigo-700 text-[12px] font-semibold px-2.5 py-0.5 rounded-full border border-indigo-100">
+            <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>All financial concepts</span>
+            <span style={{ background: 'rgba(99,102,241,0.10)', color: '#818CF8', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(99,102,241,0.18)' }}>
               {totalCount}
             </span>
           </>
         ) : showWikiLoading ? (
-          <span className="text-slate-500 flex items-center gap-2">
-            <svg className="animate-spin w-4 h-4 text-[#5b4cf0]" fill="none" viewBox="0 0 24 24">
+          <span style={{ color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg className="animate-spin w-4 h-4" style={{ color: '#818CF8' }} fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
             Searching wider knowledge base...
           </span>
         ) : query ? (
-          <span className="text-slate-600">
-            Showing results for:{' '}
-            <span className="text-[#5b4cf0] font-semibold">"{query}"</span>
+          <span style={{ color: 'rgba(255,255,255,0.45)' }}>
+            Showing results for: <span style={{ color: '#818CF8', fontWeight: 600 }}>"{query}"</span>
           </span>
         ) : (
-          <span className="text-slate-600 font-medium capitalize">{activeCategory}</span>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 500, textTransform: 'capitalize' }}>{activeCategory}</span>
         )}
       </div>
 
@@ -488,51 +545,54 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
 
       {/* State 2 — Wikipedia result */}
       {showWikiResult && wikiResult && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <motion.div
             variants={wikiCard}
             initial="hidden"
             animate="visible"
-            className="bg-[#ede9fe]/30 border border-[#c4bafc] rounded-2xl p-6"
+            style={{
+              background: 'rgba(99,102,241,0.06)',
+              border: '1px solid rgba(99,102,241,0.20)',
+              borderRadius: 10, padding: 24,
+              boxShadow: '0 0 40px rgba(99,102,241,0.06)',
+            }}
           >
             {/* Wikipedia header */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-[#5b4cf0] rounded-full flex items-center justify-center">
-                <span className="text-white text-[11px] font-black">W</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div style={{ width: 22, height: 22, background: '#818CF8', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: 'white', fontSize: 11, fontWeight: 700 }}>W</span>
               </div>
-              <span className="text-[#5b4cf0] text-[12px] font-semibold">From Wikipedia</span>
-              <ExternalLink size={12} className="text-[#5b4cf0]" />
+              <span style={{ color: '#818CF8', fontSize: 12, fontWeight: 500 }}>From Wikipedia</span>
+              <ExternalLink size={12} color="#818CF8" />
             </div>
 
-            {/* Content with optional thumbnail */}
-            <div className="overflow-hidden">
+            <div style={{ overflow: 'hidden' }}>
               {wikiResult.thumbnail && (
                 <img
                   src={wikiResult.thumbnail}
                   alt={wikiResult.title}
-                  className="float-right ml-4 mb-2 w-32 h-24 object-cover rounded-xl"
+                  style={{ float: 'right', marginLeft: 16, marginBottom: 8, width: 120, height: 90, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}
                 />
               )}
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">{wikiResult.title}</h2>
-              <p className="text-gray-600 text-[14px] leading-relaxed">{wikiResult.extract}</p>
+              <h2 style={{ fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.90)', marginBottom: 10 }}>{wikiResult.title}</h2>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.75 }}>{wikiResult.extract}</p>
             </div>
 
-            <div className="clear-both pt-4">
+            <div style={{ clear: 'both', paddingTop: 16 }}>
               <a
                 href={wikiResult.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#5b4cf0] font-semibold text-[13px] hover:underline inline-flex items-center gap-1"
+                style={{ color: '#818CF8', fontWeight: 500, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none' }}
               >
                 Read full article on Wikipedia → <ExternalLink size={12} />
               </a>
             </div>
           </motion.div>
 
-          {/* Related glossary terms below wiki card */}
           {looselyRelated.length > 0 && (
             <div>
-              <p className="text-[12px] font-semibold text-gray-400 mb-3 uppercase tracking-widest">
+              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.25)', marginBottom: 14, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                 Related concepts in ROOKNOMICS:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -547,19 +607,25 @@ export default function LearnPage({ setCurrentView }: LearnPageProps) {
 
       {/* State 4 — no results + wiki error */}
       {showError && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <Search size={48} className="text-gray-200" />
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div style={{ width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Search size={40} color="rgba(255,255,255,0.10)" />
           </div>
-          <h3 className="text-gray-700 font-semibold text-lg mb-2">No results for "{query}"</h3>
-          <p className="text-gray-500 text-[14px] max-w-xs mx-auto">{wikiError}</p>
-          <p className="text-gray-400 text-[13px] mt-4 mb-3">Try:</p>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <h3 style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>No results for "{query}"</h3>
+          <p style={{ color: 'rgba(255,255,255,0.30)', fontSize: 13, maxWidth: 280, margin: '0 auto 24px' }}>{wikiError}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
             {['RSI', 'Drawdown', 'Sharpe Ratio', 'Backtesting', 'Bull Market'].map((s) => (
               <button
                 key={s}
                 onClick={() => setQuery(s)}
-                className="bg-white border border-gray-200 text-gray-600 text-[13px] font-medium px-3 py-1.5 rounded-full hover:border-[#c4bafc] hover:text-[#5b4cf0] transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.50)', fontSize: 12, fontWeight: 500,
+                  padding: '6px 14px', borderRadius: 5, cursor: 'pointer',
+                  transition: 'border-color 150ms ease, color 150ms ease',
+                }}
+                onMouseEnter={(e: any) => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.30)'; e.currentTarget.style.color = '#818CF8'; }}
+                onMouseLeave={(e: any) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.50)'; }}
               >
                 {s}
               </button>

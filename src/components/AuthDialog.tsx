@@ -184,29 +184,36 @@ export default function AuthDialog({ open, onClose, setCurrentView }: AuthDialog
                 : 'Start backtesting in seconds.'}
             </p>
 
-            {/* Google OAuth */}
-            <div style={{ marginBottom: 20 }}>
-              <GoogleLogin
-                onSuccess={async (credentialResponse) => {
-                  try {
-                    const decoded: any = jwtDecode(credentialResponse.credential!);
-                    const res = await googleAuth({
-                      googleId: decoded.sub,
-                      email: decoded.email,
-                      name: decoded.name,
-                      avatar: decoded.picture,
-                    });
-                    if (res.token) {
-                      localStorage.setItem('token', res.token);
-                      setCurrentView('builder');
-                      onClose();
+            {/* Google OAuth — full width */}
+            <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%' }}>
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                    try {
+                      const decoded: any = jwtDecode(credentialResponse.credential!);
+                      const res = await googleAuth({
+                        googleId: decoded.sub,
+                        email: decoded.email,
+                        name: decoded.name,
+                        avatar: decoded.picture,
+                      });
+                      if (res.token) {
+                        localStorage.setItem('token', res.token);
+                        setCurrentView('builder');
+                        onClose();
+                      }
+                    } catch (err) {
+                      console.error('Google login failed', err);
+                      alert('Google login failed');
                     }
-                  } catch (err) {
-                    console.error('Google login failed', err);
-                    alert('Google login failed');
-                  }
-                }}
-              />
+                  }}
+                  width="400"
+                  theme="filled_black"
+                  size="large"
+                  text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                  shape="rectangular"
+                />
+              </div>
             </div>
 
             {/* OR divider */}

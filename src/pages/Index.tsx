@@ -687,6 +687,14 @@ export default function App() {
   const [learnSearch, setLearnSearch] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem('token'))
+
+  // Sync isLoggedIn when token changes
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setIsLoggedIn(false)
+    setCurrentView('landing')
+  }
 
   const backtestState = useSelector((state: RootState) => state.backtest)
 
@@ -788,23 +796,43 @@ export default function App() {
 
           {/* Auth / menu button */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              onClick={() => setShowAuth(true)}
-              style={{
-                fontSize: 11, fontWeight: 500, letterSpacing: '0.06em',
-                color: 'rgba(255,255,255,0.55)',
-                background: 'none', border: '1px solid rgba(255,255,255,0.10)',
-                padding: '6px 14px', borderRadius: 5, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 6,
-                transition: 'color 150ms ease, border-color 150ms ease',
-              }}
-              onMouseEnter={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.85)'; }}
-              onMouseLeave={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.10)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.55)'; }}
-            >
-              <LogIn size={13} /> Sign In
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                style={{
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.06em',
+                  color: 'rgba(255,255,255,0.55)',
+                  background: 'none', border: '1px solid rgba(255,255,255,0.10)',
+                  padding: '6px 14px', borderRadius: 5, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'color 150ms ease, border-color 150ms ease',
+                }}
+                onMouseEnter={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.85)'; }}
+                onMouseLeave={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.10)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.55)'; }}
+              >
+                <LogIn size={13} /> Log Out
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuth(true)}
+                style={{
+                  fontSize: 11, fontWeight: 500, letterSpacing: '0.06em',
+                  color: 'rgba(255,255,255,0.55)',
+                  background: 'none', border: '1px solid rgba(255,255,255,0.10)',
+                  padding: '6px 14px', borderRadius: 5, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'color 150ms ease, border-color 150ms ease',
+                }}
+                onMouseEnter={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.85)'; }}
+                onMouseLeave={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.10)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.55)'; }}
+              >
+                <LogIn size={13} /> Sign In
+              </button>
+            )}
+            {/* Hamburger — mobile only */}
             <button
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.50)', display: 'flex', alignItems: 'center' }}
+              className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <XIcon size={18} /> : <Menu size={18} />}
@@ -827,17 +855,26 @@ export default function App() {
                 {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : 'Learn'}
               </button>
             ))}
-            <button
-              onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }}
-              style={{ padding: '9px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500, textAlign: 'left', color: '#818CF8', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              Sign In
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                style={{ padding: '9px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500, textAlign: 'left', color: '#F87171', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Log Out
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }}
+                style={{ padding: '9px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500, textAlign: 'left', color: '#818CF8', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Sign In
+              </button>
+            )}
           </div>
         )}
       </nav>
 
-      <AuthDialog open={showAuth} onClose={() => setShowAuth(false)} setCurrentView={setCurrentView} />
+      <AuthDialog open={showAuth} onClose={() => { setShowAuth(false); setIsLoggedIn(!!localStorage.getItem('token')); }} setCurrentView={setCurrentView} />
 
       <div style={{ paddingTop: 52 }}>
         {currentView === 'landing' && <LandingView setCurrentView={(v: string) => setCurrentView(v as ViewType)} setShowAuth={setShowAuth} />}
@@ -901,8 +938,8 @@ function PerformanceChart({ data }: { data: any[] }) {
     <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, marginBottom: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h2 className="text-slate-900 font-semibold text-lg">Portfolio Value Over Time</h2>
-          <p className="text-slate-600 text-sm">Monthly equity curve · 240 data points</p>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.01em' }}>Portfolio Value Over Time</h2>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>Monthly equity curve · 240 data points</p>
         </div>
         <div className="flex gap-2">
           <span className="bg-rose-500/20 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded-full">Your Strategy</span>
@@ -939,11 +976,14 @@ function PerformanceChart({ data }: { data: any[] }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex flex-wrap gap-3 mt-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
         {annotations.map((a, i) => (
-          <div key={i} className="bg-slate-100/60 border border-slate-200/40 rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-indigo-500/40 text-xs text-slate-700 transition-all duration-300">
-            <a.icon size={14} className={a.color} />
-            <span>{a.label}</span>
+          <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', transition: 'border-color 150ms ease' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.30)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'}
+          >
+            <a.icon size={13} className={a.color} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontFamily: 'JetBrains Mono, monospace' }}>{a.label}</span>
           </div>
         ))}
       </div>
@@ -964,30 +1004,30 @@ function TradeHistoryTable() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-100/50 text-slate-600 text-xs uppercase tracking-wide">
+            <tr style={{ background: 'rgba(99,102,241,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               {['Date', 'Action', 'Price', 'Shares', 'P&L', 'Return', 'Cumulative'].map(h => (
-                <th key={h} className="px-3 py-2.5 text-left font-medium">{h}</th>
+                <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 9, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {tradeHistory.map((row, i) => (
-              <tr key={i} className={`border-t border-slate-200/50 ${i % 2 === 0 ? 'bg-slate-100/20' : ''}`}>
-                <td className="px-3 py-2.5 text-slate-700">{row.date}</td>
-                <td className={`px-3 py-2.5 font-medium ${row.action === 'BUY' ? 'text-indigo-600' : 'text-amber-600'}`}>{row.action}</td>
-                <td className="px-3 py-2.5 text-slate-700">{row.price}</td>
-                <td className="px-3 py-2.5 text-slate-700">{row.shares}</td>
-                <td className={`px-3 py-2.5 font-medium ${row.positive === true ? 'text-emerald-600' : row.positive === false ? 'text-rose-600' : 'text-slate-500'}`}>{row.pnl}</td>
-                <td className={`px-3 py-2.5 ${row.positive === true ? 'text-emerald-600' : row.positive === false ? 'text-rose-600' : 'text-slate-500'}`}>{row.ret}</td>
-                <td className="px-3 py-2.5 text-slate-700">{row.cum}</td>
+              <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace' }}>{row.date}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, fontWeight: 600, color: row.action === 'BUY' ? '#818CF8' : '#F59E0B', fontFamily: 'JetBrains Mono, monospace' }}>{row.action}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.price}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.shares}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, fontWeight: 500, color: row.positive === true ? '#10B981' : row.positive === false ? '#F43F5E' : 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{row.pnl}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, color: row.positive === true ? '#10B981' : row.positive === false ? '#F43F5E' : 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{row.ret}</td>
+                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.cum}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between items-center mt-4">
-        <span className="text-slate-500 text-xs">Showing 8 of 214 trades</span>
-        <span className="text-indigo-600 text-xs cursor-pointer hover:text-indigo-700 transition-colors">View All</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'JetBrains Mono, monospace' }}>Showing 8 of 214 trades</span>
+        <span style={{ fontSize: 10, color: '#818CF8', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace' }}>View All →</span>
       </div>
     </div>
   );
@@ -1029,24 +1069,24 @@ function PerformanceMetrics({ metrics, tab, setTab }: any) {
           </button>
         ))}
       </div>
-      <div className="space-y-0">
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         {rows.map((r, i) => (
-          <div key={i} className={`flex justify-between items-center py-3 ${i < rows.length - 1 ? 'border-b border-slate-200' : ''}`}>
-            <span className="text-slate-600 text-sm flex items-center gap-1">
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', display: 'flex', alignItems: 'center', gap: 4 }}>
               {r.label}
-              {r.label === 'Total Return' && !isStrategy && <Info size={12} className="text-slate-500" />}
+              {r.label === 'Total Return' && !isStrategy && <Info size={11} color="rgba(255,255,255,0.25)" />}
             </span>
-            <div className="text-right">
-              <span className={`text-sm ${r.color}`}>{r.value}</span>
-              {r.note && <p className="text-slate-500 text-xs">{r.note}</p>}
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 500, color: r.color.includes('emerald') ? '#10B981' : r.color.includes('rose') ? '#F43F5E' : 'rgba(255,255,255,0.75)' }}>{r.value}</span>
+              {r.note && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>{r.note}</p>}
             </div>
           </div>
         ))}
       </div>
-      <div className="bg-amber-500/10 border border-amber-200 rounded-xl p-4 mt-4">
-        <div className="flex gap-2">
-          <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-amber-800/80 text-xs leading-relaxed">
+      <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 8, padding: 14, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <AlertTriangle size={14} color="#F59E0B" style={{ flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 11, color: 'rgba(245,158,11,0.80)', lineHeight: 1.6 }}>
             After fees and taxes, your strategy returned +47% vs the S&P's +332% over 20 years.
           </p>
         </div>
