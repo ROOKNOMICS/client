@@ -10,6 +10,10 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { runBacktest } from '@/store/backtestSlice';
+import { clearBacktest } from '@/store/backtestSlice';
+import { useDispatch } from 'react-redux'
+import type { AppDispatch } from '../store/index'
 
 interface BuilderViewProps {
   setCurrentView: (v: string) => void;
@@ -39,9 +43,49 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
   const [stopLossPercent, setStopLossPercent] = useState(10);
   const [takeProfit, setTakeProfit] = useState(false);
   const [takeProfitPercent, setTakeProfitPercent] = useState(20);
+  const dispatch = useDispatch<AppDispatch>()
 
-  const handleRunBacktest = () => {
-    setCurrentView('results');
+  
+   const handleRunBacktest = async () => {
+     const activeRules=[]
+     if (useMA) {
+       activeRules.push("MA Crossover") 
+     }
+     if (useRSI) {
+       activeRules.push("RSI Entry") 
+     }
+     if (stopLoss) {
+       activeRules.push("Stop Loss") 
+     }
+     const rulesConfig={
+       "rsi":{
+         "enabled": useRSI,
+         "period": rsiPeriod,
+         "buyBelow": rsiBuy,
+         "sellAbove": rsiSell
+       },
+       "maCross":{
+         "enabled": useMA,
+         "type": maType,
+         "fastPeriod": maShort,
+         "slowPeriod": maLong
+       }
+      }
+      const result= {
+        "symbol":symbol,
+        "startDate": startDate,
+        "endDate":endDate,
+        "capital":initialCapital,
+        "activeRules": activeRules,
+        "rulesConfig": rulesConfig
+      }
+    dispatch(clearBacktest())
+    try {
+      await dispatch(runBacktest({ ...result })).unwrap()
+      setCurrentView('results')
+    } catch (err) {
+      console.error('Backtest failed', err)
+    }
   };
 
   const handleReset = () => {
