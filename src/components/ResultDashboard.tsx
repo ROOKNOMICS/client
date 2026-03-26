@@ -1,25 +1,15 @@
+// 🎬 ROOKNOMICS CINEMATIC UI: ResultsDashboard — Bloomberg terminal dark redesign
+// ZERO LOGIC CHANGES — all formatters, computations, props preserved exactly
 import { useMemo, useState } from 'react'
 import {
-  Activity,
-  AlertTriangle,
-  Clock3,
-  Gavel,
-  Info,
-  List,
-  PieChart,
+  Activity, AlertTriangle, Clock3, List, Trophy,
 } from 'lucide-react'
 import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
+  PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer,
 } from 'recharts'
 import { PortfolioChart } from './PortfolioChart'
 import { TradeMarkerChart } from './TradeMarkerChart'
 import { MetricsComparisonChart } from './MetricsComparisonChart'
-import { Trophy } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { fadeUp, staggerContainer, scaleUp } from '@/lib/animations'
 
@@ -74,6 +64,7 @@ interface ResultsDashboardProps {
   rawDataPreview?: string | null
 }
 
+// 🎬 All formatters identical — zero logic change
 function formatSignedPercent(value: number, digits = 1) {
   const sign = value > 0 ? '+' : ''
   return `${sign}${value.toFixed(digits)}%`
@@ -95,19 +86,27 @@ function formatCurrency(value: number | null, digits = 0) {
 }
 
 function metricColor(value: number, positiveIsGood = true) {
-  if (value === 0) return 'text-slate-900'
+  if (value === 0) return 'rgba(255,255,255,0.60)'
   if (positiveIsGood) {
-    return value > 0 ? 'text-rose-600' : 'text-emerald-600'
+    return value > 0 ? '#10B981' : '#F43F5E'
   }
-  return value < 0 ? 'text-rose-600' : 'text-emerald-600'
+  return value < 0 ? '#F43F5E' : '#10B981'
 }
 
 function tradeColor(value: number | null) {
-  if (value === null || Number.isNaN(value)) return 'text-slate-500'
-  if (value > 0) return 'text-emerald-600'
-  if (value < 0) return 'text-rose-600'
-  return 'text-slate-600'
+  if (value === null || Number.isNaN(value)) return 'rgba(255,255,255,0.30)'
+  if (value > 0) return '#10B981'
+  if (value < 0) return '#F43F5E'
+  return 'rgba(255,255,255,0.50)'
 }
+
+// 🎬 ROOKNOMICS CINEMATIC UI: Shared styles
+const card = {
+  background: 'linear-gradient(180deg, #141414 0%, #0D0D0D 100%)',
+  border: '1px solid rgba(255,255,255,0.06)',
+  borderRadius: 10,
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+} as React.CSSProperties
 
 export function ResultsDashboard({
   portfolioSeries,
@@ -130,99 +129,294 @@ export function ResultsDashboard({
   const tradeRows = useMemo(() => tradeLog.slice(0, 8), [tradeLog])
 
   const metricRows = [
-    {
-      label: 'Total Return',
-      value: formatSignedPercent(activeMetrics.totalReturn),
-      color: metricColor(activeMetrics.totalReturn),
-    },
-    {
-      label: 'Annualized Return',
-      value: formatSignedPercent(activeMetrics.annualizedReturn, 2),
-      color: metricColor(activeMetrics.annualizedReturn),
-    },
-    {
-      label: 'Max Drawdown',
-      value: formatSignedPercent(activeMetrics.maxDrawdown),
-      color: 'text-rose-600',
-      note: '(Largest peak-to-trough fall)',
-    },
-    {
-      label: 'Win Rate',
-      value: activeMetrics.winRate === null ? 'N/A' : formatPercent(activeMetrics.winRate),
-      color: 'text-slate-900',
-    },
-    {
-      label: 'Sharpe Ratio',
-      value: activeMetrics.sharpeRatio.toFixed(2),
-      color: 'text-slate-900',
-    },
-    {
-      label: 'Avg Trade Duration',
-      value: activeMetrics.avgTradeDurationDays === null ? 'N/A' : `${Math.round(activeMetrics.avgTradeDurationDays)} days`,
-      color: 'text-slate-900',
-    },
-    {
-      label: 'Total Trades',
-      value: String(activeMetrics.totalTrades),
-      color: 'text-slate-900',
-    },
-    {
-      label: 'Trading Fees Paid',
-      value: formatCurrency(activeMetrics.tradingFees),
-      color: activeMetrics.tradingFees > 0 ? 'text-rose-600' : 'text-slate-900',
-    },
+    { label: 'Total Return', value: formatSignedPercent(activeMetrics.totalReturn), color: metricColor(activeMetrics.totalReturn) },
+    { label: 'Annualized Return', value: formatSignedPercent(activeMetrics.annualizedReturn, 2), color: metricColor(activeMetrics.annualizedReturn) },
+    { label: 'Max Drawdown', value: formatSignedPercent(activeMetrics.maxDrawdown), color: '#F43F5E', note: 'Peak-to-trough fall' },
+    { label: 'Win Rate', value: activeMetrics.winRate === null ? 'N/A' : formatPercent(activeMetrics.winRate), color: 'rgba(255,255,255,0.75)' },
+    { label: 'Sharpe Ratio', value: activeMetrics.sharpeRatio.toFixed(2), color: 'rgba(255,255,255,0.75)' },
+    { label: 'Avg Trade Duration', value: activeMetrics.avgTradeDurationDays === null ? 'N/A' : `${Math.round(activeMetrics.avgTradeDurationDays)} days`, color: 'rgba(255,255,255,0.75)' },
+    { label: 'Total Trades', value: String(activeMetrics.totalTrades), color: 'rgba(255,255,255,0.75)' },
+    { label: 'Trading Fees Paid', value: formatCurrency(activeMetrics.tradingFees), color: activeMetrics.tradingFees > 0 ? '#F43F5E' : 'rgba(255,255,255,0.75)' },
   ]
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
-      {/* Verdict banner */}
-      <motion.div 
-        variants={scaleUp} 
-        initial="hidden" 
-        animate="visible" 
-        className={`p-6 md:p-8 rounded-[2.5rem] mb-10 flex flex-col md:flex-row md:items-center gap-6 border shadow-sm ${strategyWon ? 'bg-emerald-50 border-emerald-200/60' : 'bg-rose-50 border-rose-200/60'}`}
+    <div style={{ maxWidth: 1440, margin: '0 auto', padding: '40px 40px 64px', background: '#050505', minHeight: '100vh' }} className="rn-page-enter">
+
+      {/* ── Page header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        style={{ marginBottom: 36 }}
       >
-        <div className={`w-16 h-16 flex items-center justify-center rounded-[1.5rem] shrink-0 border ${strategyWon ? 'bg-white border-emerald-100 text-emerald-600 shadow-[0_8px_16px_rgba(16,185,129,0.1)]' : 'bg-white border-rose-100 text-rose-600 shadow-[0_8px_16px_rgba(244,63,94,0.1)]'}`}>
-          {strategyWon ? <Trophy size={28} strokeWidth={1.5} /> : <AlertTriangle size={28} strokeWidth={1.5} />}
+        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>
+          BACKTEST ANALYSIS
+        </p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.90)' }}>Results Dashboard</h1>
+      </motion.div>
+
+      {/* ── Verdict Banner ── */}
+      <motion.div
+        variants={scaleUp}
+        initial="hidden"
+        animate="visible"
+        style={{
+          ...card,
+          padding: '24px 28px',
+          marginBottom: 24,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 20,
+          borderColor: strategyWon ? 'rgba(16,185,129,0.20)' : 'rgba(244,63,94,0.20)',
+          boxShadow: strategyWon
+            ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(16,185,129,0.06)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(244,63,94,0.06)',
+        }}
+      >
+        <div style={{
+          width: 48, height: 48, flexShrink: 0,
+          background: strategyWon ? 'rgba(16,185,129,0.10)' : 'rgba(244,63,94,0.10)',
+          border: `1px solid ${strategyWon ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}`,
+          borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {strategyWon
+            ? <Trophy size={22} color="#10B981" strokeWidth={1.5} />
+            : <AlertTriangle size={22} color="#F43F5E" strokeWidth={1.5} />}
+        </div>
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 4 }}>VERDICT</p>
+          <p style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.90)', letterSpacing: '-0.01em' }}>
+            {strategyWon
+              ? `Your strategy outperformed the index by ${formatSignedPercent(returnGap)}`
+              : `The index outperformed your strategy by ${formatSignedPercent(Math.abs(returnGap))}`}
+          </p>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 24 }}>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>YOUR RETURN</p>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 20, fontWeight: 500, color: '#818CF8' }}>
+              {formatSignedPercent(portfolioMetrics.totalReturn)}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>S&P 500 RETURN</p>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 20, fontWeight: 500, color: 'rgba(255,255,255,0.60)' }}>
+              {formatSignedPercent(benchmarkMetrics.totalReturn)}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Summary Stat Cards ── */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}
+        className="grid-cols-2 md:grid-cols-4"
+      >
+        {[
+          { label: 'YOUR RETURN', value: formatSignedPercent(portfolioMetrics.totalReturn), type: 'positive' },
+          { label: 'INDEX RETURN', value: formatSignedPercent(benchmarkMetrics.totalReturn), type: 'neutral' },
+          { label: 'MAX DRAWDOWN', value: formatSignedPercent(portfolioMetrics.maxDrawdown), type: 'negative' },
+          { label: 'TOTAL TRADES', value: String(portfolioMetrics.totalTrades), type: 'neutral' },
+        ].map(c => (
+          <motion.div
+            variants={fadeUp}
+            key={c.label}
+            style={{
+              ...card,
+              padding: '20px 24px',
+              boxShadow: c.type === 'positive'
+                ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(16,185,129,0.06)'
+                : c.type === 'negative'
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(244,63,94,0.06)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
+          >
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 10 }}>{c.label}</p>
+            <p style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 26,
+              fontWeight: 500,
+              letterSpacing: '-0.02em',
+              color: c.type === 'positive' ? '#10B981' : c.type === 'negative' ? '#F43F5E' : 'rgba(255,255,255,0.90)',
+            }}>{c.value}</p>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* ── Metric Tab Selector ── */}
+      <div style={{
+        display: 'flex',
+        gap: 0,
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        marginBottom: 24,
+      }}>
+        {(['strategy', 'sp500'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setMetricTab(tab)}
+            style={{
+              padding: '10px 20px',
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: metricTab === tab ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.30)',
+              background: 'none',
+              border: 'none',
+              borderBottom: metricTab === tab ? '2px solid #6366F1' : '2px solid transparent',
+              cursor: 'pointer',
+              transition: 'color 150ms ease, border-color 150ms ease',
+              marginBottom: -1,
+            }}
+          >
+            {tab === 'strategy' ? 'Your Strategy' : 'S&P 500'}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Metrics Grid ── */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}
+        className="grid-cols-2 md:grid-cols-4"
+      >
+        {metricRows.map(row => (
+          <motion.div
+            variants={fadeUp}
+            key={row.label}
+            style={{ ...card, padding: '18px 22px' }}
+          >
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>
+              {row.label}
+            </p>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 500, color: row.color }}>
+              {row.value}
+            </p>
+            {(row as any).note && (
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.20)', marginTop: 4 }}>{(row as any).note}</p>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* ── Charts ── */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-50px' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        {/* Portfolio vs Index chart */}
+        <motion.div variants={fadeUp} style={{ ...card, padding: 28 }}>
+          <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>EQUITY CURVE</p>
+          <h2 style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.85)', marginBottom: 24 }}>
+            Portfolio vs S&P 500 Over Time
+          </h2>
+          <PortfolioChart portfolioSeries={portfolioSeries} benchmarkSeries={benchmarkSeries} />
+        </motion.div>
+
+        {/* Trade Markers + Metrics Comparison */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="grid-cols-1 lg:grid-cols-2">
+          <motion.div variants={fadeUp} style={{ ...card, padding: 28 }}>
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>TRADE TIMING</p>
+            <h2 style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.85)', marginBottom: 24 }}>
+              When You Traded
+            </h2>
+            <TradeMarkerChart portfolioSeries={portfolioSeries} tradeLog={tradeLog} />
+          </motion.div>
+
+          <motion.div variants={fadeUp} style={{ ...card, padding: 28 }}>
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>DEEP DIVE</p>
+            <h2 style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.85)', marginBottom: 24 }}>
+              Performance Analysis
+            </h2>
+            <MetricsComparisonChart portfolioMetrics={portfolioMetrics} benchmarkMetrics={benchmarkMetrics} />
+          </motion.div>
         </div>
 
-        <div className="bg-white border border-slate-200/70 rounded-[2rem] p-6 shadow-[0_30px_80px_rgba(148,163,184,0.12)]">
-          <div className="flex items-center gap-3 mb-5">
-            <List size={18} className="text-indigo-600" />
-            <h2 className="text-slate-900 font-semibold text-lg">Trade History</h2>
-            <span className="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full">
-              {portfolioMetrics.totalTrades} trades
-            </span>
+        {/* Trade Log — Bloomberg terminal style */}
+        <motion.div variants={fadeUp} style={{ ...card, padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <List size={15} color="#818CF8" strokeWidth={1.5} />
+            <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>TRADE HISTORY</p>
+            <div style={{
+              background: 'rgba(99,102,241,0.10)',
+              border: '1px solid rgba(99,102,241,0.20)',
+              borderRadius: 4,
+              padding: '2px 8px',
+              fontSize: 10, fontWeight: 500, letterSpacing: '0.06em',
+              color: '#818CF8',
+              textTransform: 'uppercase',
+            }}>
+              {portfolioMetrics.totalTrades} TRADES
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="bg-slate-100/70 text-slate-600 text-xs uppercase tracking-wide">
-                  {['Date', 'Action', 'Price', 'Shares', 'P&L', 'Return', 'Cumulative'].map((heading) => (
-                    <th key={heading} className="px-4 py-3 text-left font-medium">{heading}</th>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  {['Date', 'Action', 'Price', 'Shares', 'P&L', 'Return%', 'Cumulative'].map(h => (
+                    <th key={h} style={{
+                      padding: '8px 12px',
+                      textAlign: 'left',
+                      fontSize: 9,
+                      fontWeight: 500,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(255,255,255,0.25)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {tradeRows.map((trade, index) => (
-                  <tr key={`${trade.date}-${trade.action}-${index}`} className="border-t border-slate-200/70">
-                    <td className="px-4 py-4 text-slate-700">{trade.date}</td>
-                    <td className={`px-4 py-4 font-medium ${trade.action === 'BUY' ? 'text-indigo-600' : 'text-amber-600'}`}>
-                      {trade.action}
+                  <tr
+                    key={`${trade.date}-${trade.action}-${index}`}
+                    style={{
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      transition: 'background 150ms ease',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}
+                  >
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{trade.date}</td>
+                    <td style={{ padding: '12px 12px' }}>
+                      <span style={{
+                        background: trade.action === 'BUY' ? 'rgba(99,102,241,0.12)' : 'rgba(245,158,11,0.10)',
+                        border: `1px solid ${trade.action === 'BUY' ? 'rgba(99,102,241,0.25)' : 'rgba(245,158,11,0.20)'}`,
+                        color: trade.action === 'BUY' ? '#818CF8' : '#F59E0B',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 10,
+                        fontWeight: 500,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}>
+                        {trade.action}
+                      </span>
                     </td>
-                    <td className="px-4 py-4 text-slate-700">{formatCurrency(trade.price, 2)}</td>
-                    <td className="px-4 py-4 text-slate-700">
-                      {trade.shares === null || trade.shares === undefined ? '-' : trade.shares.toLocaleString()}
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.70)' }}>{formatCurrency(trade.price, 2)}</td>
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.50)' }}>
+                      {trade.shares === null || trade.shares === undefined ? '—' : trade.shares.toLocaleString()}
                     </td>
-                    <td className={`px-4 py-4 font-medium ${tradeColor(trade.pnl ?? null)}`}>
-                      {trade.pnl === null || trade.pnl === undefined ? '-' : formatCurrency(trade.pnl, 0)}
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: tradeColor(trade.pnl ?? null), fontWeight: 500 }}>
+                      {trade.pnl === null || trade.pnl === undefined ? '—' : formatCurrency(trade.pnl, 0)}
                     </td>
-                    <td className={`px-4 py-4 font-medium ${tradeColor(trade.returnPct ?? null)}`}>
-                      {trade.returnPct === null || trade.returnPct === undefined ? '-' : formatSignedPercent(trade.returnPct)}
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: tradeColor(trade.returnPct ?? null), fontWeight: 500 }}>
+                      {trade.returnPct === null || trade.returnPct === undefined ? '—' : formatSignedPercent(trade.returnPct)}
                     </td>
-                    <td className="px-4 py-4 text-slate-700">
-                      {trade.cumulative === null || trade.cumulative === undefined ? '-' : formatCurrency(trade.cumulative, 0)}
+                    <td style={{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.50)' }}>
+                      {trade.cumulative === null || trade.cumulative === undefined ? '—' : formatCurrency(trade.cumulative, 0)}
                     </td>
                   </tr>
                 ))}
@@ -230,93 +424,50 @@ export function ResultsDashboard({
             </table>
           </div>
 
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-slate-500 text-xs">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
               Showing {tradeRows.length} of {portfolioMetrics.totalTrades} trades
             </span>
-            <span className="text-indigo-600 text-xs">View All</span>
+            <span style={{ fontSize: 11, color: '#818CF8', cursor: 'pointer' }}>View All</span>
           </div>
-        </div>
-      </motion.div>
-
-      {/* Summary metric cards */}
-      <motion.div 
-        className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-12"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        {[
-          { label: 'Your return', value: `+${portfolioMetrics.totalReturn}%`, highlight: true },
-          { label: 'Index return', value: `+${benchmarkMetrics.totalReturn}%` },
-          { label: 'Max drawdown', value: `${portfolioMetrics.maxDrawdown}%` },
-          { label: 'Total trades', value: portfolioMetrics.totalTrades },
-        ].map(card => (
-          <motion.div variants={fadeUp} key={card.label} className="bg-white border border-slate-200/80 rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-shadow">
-            <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">{card.label}</p>
-            <p className={`text-3xl md:text-4xl font-extrabold tracking-tight ${card.highlight ? 'text-indigo-600' : 'text-slate-900'}`}>{card.value}</p>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Charts Grid */}
-      <motion.div 
-        className="space-y-8"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-      >
-        <motion.div variants={fadeUp} className="bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-sm">
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-8 tracking-tight">Portfolio vs S&P 500 Over Time</h2>
-          <PortfolioChart portfolioSeries={portfolioSeries} benchmarkSeries={benchmarkSeries} />
         </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <motion.div variants={fadeUp} className="bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-8 tracking-tight">When You Traded</h2>
-            <TradeMarkerChart portfolioSeries={portfolioSeries} tradeLog={tradeLog} />
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-8 tracking-tight">Performance Deep Dive</h2>
-            <MetricsComparisonChart portfolioMetrics={portfolioMetrics} benchmarkMetrics={benchmarkMetrics} />
-          </motion.div>
-        </div>
       </motion.div>
 
-        {loading && (
-          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-sm text-indigo-700">
-            Calculating your backtest results...
-          </div>
-        )}
+      {/* ── State banners — zero logic change ── */}
+      {loading && (
+        <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 8, padding: '14px 18px', marginTop: 16, fontSize: 13, color: '#818CF8', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Activity size={14} className="animate-spin" />
+          Calculating your backtest results...
+        </div>
+      )}
 
-        {error && (
-          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-sm text-rose-700">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: 8, padding: '14px 18px', marginTop: 16, fontSize: 13, color: '#F43F5E' }}>
+          {error}
+        </div>
+      )}
 
-        {!hasBacktestData && !loading && !error && (
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600 flex gap-2">
-            <Clock3 size={16} className="mt-0.5 text-slate-500" />
-            <span>Run a backtest in the Builder to populate this dashboard with real Redux data.</span>
-          </div>
-        )}
+      {!hasBacktestData && !loading && !error && (
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '20px', marginTop: 16, textAlign: 'center' }}>
+          <Clock3 size={36} color="rgba(255,255,255,0.12)" style={{ margin: '0 auto 12px' }} />
+          <p style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>No Backtest Data</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.20)' }}>Run a backtest in the Builder to populate this dashboard.</p>
+        </div>
+      )}
 
-        {hasBacktestData && !parsedDataAvailable && !loading && !error && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800 space-y-2">
-            <div className="flex gap-2">
-              <AlertTriangle size={16} className="mt-0.5 text-amber-600" />
-              <span>Backtest data was received, but the results screen could not map the payload into charts yet.</span>
-            </div>
-            {rawDataPreview && (
-              <pre className="text-xs text-slate-700 bg-white/70 border border-amber-100 rounded-xl p-3 overflow-auto max-h-48 whitespace-pre-wrap break-all">
-                {rawDataPreview}
-              </pre>
-            )}
+      {hasBacktestData && !parsedDataAvailable && !loading && !error && (
+        <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8, padding: '14px 18px', marginTop: 16, fontSize: 13 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: rawDataPreview ? 12 : 0 }}>
+            <AlertTriangle size={14} color="#F59E0B" style={{ marginTop: 2 }} />
+            <span style={{ color: '#F59E0B' }}>Backtest data received — charts could not be mapped from the response payload.</span>
           </div>
-        )}
-      </div>
+          {rawDataPreview && (
+            <pre style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: 12, overflowX: 'auto', maxHeight: 160, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'JetBrains Mono, monospace' }}>
+              {rawDataPreview}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

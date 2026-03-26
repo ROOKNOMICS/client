@@ -1,65 +1,409 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* 🎬 ROOKNOMICS CINEMATIC UI: Global Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 🎬 ROOKNOMICS CINEMATIC UI: shadcn/ui design tokens — overridden to dark cinematic palette */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --background: 0 0% 2%;           /* #050505 */
+    --foreground: 0 0% 90%;          /* white/90 */
+    --card: 0 0% 5.5%;               /* #0D0D0D */
+    --card-foreground: 0 0% 90%;
+    --popover: 0 0% 5.5%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 239 84% 67%;          /* #6366F1 indigo */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 7%;            /* #111111 */
+    --secondary-foreground: 0 0% 60%;
+    --muted: 0 0% 7%;
+    --muted-foreground: 0 0% 30%;
+    --accent: 0 0% 7%;
+    --accent-foreground: 0 0% 60%;
+    --destructive: 347 95% 61%;      /* #F43F5E */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 10%;              /* #1A1A1A */
+    --input: 0 0% 10%;
+    --ring: 239 84% 67%;
+    --radius: 0.625rem;              /* 10px — machined feel */
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* ROOKNOMICS custom tokens */
+    --rn-base: #050505;
+    --rn-surface: #0D0D0D;
+    --rn-surface-hover: #111111;
+    --rn-border-subtle: #1A1A1A;
+    --rn-border-accent: #2A2A2A;
+    --rn-rim: #6366F1;
+    --rn-rim-glow: rgba(99, 102, 241, 0.15);
+    --rn-positive: #10B981;
+    --rn-negative: #F43F5E;
+    --rn-neutral: #F59E0B;
+    --rn-cyan: #22D3EE;
+    --rn-text-primary: rgba(255, 255, 255, 0.90);
+    --rn-text-secondary: rgba(255, 255, 255, 0.60);
+    --rn-text-muted: rgba(255, 255, 255, 0.30);
+    --rn-text-disabled: rgba(255, 255, 255, 0.15);
+
+    --sidebar-background: 0 0% 5.5%;
+    --sidebar-foreground: 0 0% 60%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 7%;
+    --sidebar-accent-foreground: 0 0% 60%;
+    --sidebar-border: 0 0% 10%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 
+/* 🎬 ROOKNOMICS CINEMATIC UI: Base styles */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  html {
+    background: #050505;
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    background: #050505;
+    color: rgba(255, 255, 255, 0.90);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* All numbers, data, code use JetBrains Mono */
+  .font-mono, code, kbd, samp, pre,
+  [data-mono], .data-value, .metric-value {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+/* 🎬 ROOKNOMICS CINEMATIC UI: Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.50);
+}
 
+/* 🎬 ROOKNOMICS CINEMATIC UI: Keyframes */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes rimPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.15); }
+  50%       { box-shadow: 0 0 35px rgba(99, 102, 241, 0.28); }
+}
+
+@keyframes heroPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* 🎬 ROOKNOMICS CINEMATIC UI: Utility classes */
+@layer utilities {
+
+  /* Skeleton loader */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #0D0D0D 25%,
+      #141414 50%,
+      #0D0D0D 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite;
+    border-radius: 4px;
+  }
+
+  /* Cinematic card — the foundational surface */
+  .rn-card {
+    background: linear-gradient(180deg, #141414 0%, #0D0D0D 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 0px transparent;
+    transition: box-shadow 200ms ease, border-color 200ms ease;
+  }
+
+  .rn-card:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 0 30px rgba(99, 102, 241, 0.06);
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+
+  /* Stat card with positive glow */
+  .rn-card-positive {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 30px rgba(16, 185, 129, 0.06);
+  }
+
+  /* Stat card with negative glow */
+  .rn-card-negative {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 30px rgba(244, 63, 94, 0.06);
+  }
+
+  /* Rim pulse animation for hero glow */
+  .rim-pulse {
+    animation: rimPulse 3s infinite ease-in-out;
+  }
+
+  /* Hero glow pulse */
+  .hero-glow-pulse {
+    animation: heroPulse 4s infinite ease-in-out;
+  }
+
+  /* Stat label — instrument readout style */
+  .rn-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.30);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Data value — monospace terminal style */
+  .rn-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.90);
+    letter-spacing: -0.02em;
+  }
+
+  /* Section heading */
+  .rn-heading {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.90);
+  }
+
+  /* Edge dissolve — panels fade into #050505 at the bottom */
+  .rn-edge-dissolve {
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  }
+
+  /* Primary button */
+  .rn-btn-primary {
+    background: #6366F1;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+  }
+  .rn-btn-primary:hover {
+    background: #4F46E5;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+  }
+  .rn-btn-primary:active {
+    transform: scale(0.97);
+  }
+
+  /* Secondary button */
+  .rn-btn-secondary {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+  .rn-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.90);
+  }
+  .rn-btn-secondary:active {
+    transform: scale(0.97);
+  }
+
+  /* Ghost button */
+  .rn-btn-ghost {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.40);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+  .rn-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.80);
+  }
+
+  /* Form input — terminal style */
+  .rn-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.90);
+    font-size: 13px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    font-family: 'Inter', sans-serif;
+  }
+  .rn-input::placeholder {
+    color: rgba(255, 255, 255, 0.20);
+  }
+  .rn-input:focus {
+    border-color: rgba(99, 102, 241, 0.60);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  /* Badge variants */
+  .rn-badge {
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .rn-badge-default {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.60);
+  }
+  .rn-badge-success {
+    background: rgba(16, 185, 129, 0.10);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10B981;
+  }
+  .rn-badge-danger {
+    background: rgba(244, 63, 94, 0.10);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    color: #F43F5E;
+  }
+  .rn-badge-info {
+    background: rgba(99, 102, 241, 0.10);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #818CF8;
+  }
+  .rn-badge-neutral {
+    background: rgba(245, 158, 11, 0.10);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #F59E0B;
+  }
+
+  /* Page fade-in transition */
+  .rn-page-enter {
+    animation: fadeInUp 0.25s ease-out;
+  }
+
+  /* Nav item active */
+  .rn-nav-active {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), transparent);
+    border-left: 2px solid #6366F1;
+    color: rgba(255, 255, 255, 0.90);
+  }
+
+  /* Indigo glow for primary elements */
+  .rn-indigo-glow {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
+  }
+
+  /* Table Bloomberg style */
+  .rn-table-header {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .rn-table-row {
+    height: 44px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 150ms ease;
+  }
+  .rn-table-row:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 2px solid rgba(99, 102, 241, 0.40);
+  }
+
+  /* Positive / Negative data colors */
+  .rn-positive { color: #10B981; }
+  .rn-negative { color: #F43F5E; }
+  .rn-neutral-color { color: #F59E0B; }
+  .rn-cyan { color: #22D3EE; }
+  .rn-indigo { color: #818CF8; }
+}
+
+/* 🎬 ROOKNOMICS CINEMATIC UI: Global overrides for shadcn components */
+.bg-background { background-color: #050505 !important; }
+.bg-card { background: linear-gradient(180deg, #141414 0%, #0D0D0D 100%) !important; }
+.text-foreground { color: rgba(255, 255, 255, 0.90) !important; }
+.border-border { border-color: rgba(255, 255, 255, 0.06) !important; }
+
+/* Override noise-bg for cinematic */
+.noise-bg {
+  background: #050505 !important;
+}
 .noise-bg::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+  content: none !important;
 }

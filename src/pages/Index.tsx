@@ -43,7 +43,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import type { DashboardMetrics, SeriesDay, TradeRow } from '@/components/ResultDashboard';
+import type { DashboardMetrics, SeriesDay, TradeRow, RiskStats } from '@/components/ResultDashboard';
 
 export type BacktestResult = Record<string, unknown>;
 export type UnknownRecord = Record<string, unknown>;
@@ -734,60 +734,102 @@ export default function App() {
     : null
 
   return (
-    <div className="min-h-screen bg-slate-50 noise-bg relative">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-50/80 backdrop-blur-xl border-b border-slate-200/50">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setCurrentView('landing')}>
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <BarChart2 size={16} className="text-white" strokeWidth={2.5} />
+    <div style={{ minHeight: '100vh', background: '#050505' }}>
+      {/* 🎬 ROOKNOMICS CINEMATIC UI: Dark glass nav bar */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(5,5,5,0.85)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 40px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Logo */}
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            onClick={() => setCurrentView('landing')}
+          >
+            <div style={{ width: 28, height: 28, background: '#6366F1', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(99,102,241,0.30)' }}>
+              <BarChart2 size={14} color="white" strokeWidth={2} />
             </div>
-            <span className="font-bold text-slate-900 text-lg">ROOKNOMICS</span>
+            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.90)' }}>ROOKNOMICS</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop nav links */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {(['landing', 'builder', 'results', 'news', 'learn'] as ViewType[]).map(v => (
               <button key={v} onClick={() => {
-                const token = localStorage.getItem("token");
-
+                const token = localStorage.getItem('token');
                 if (!token) {
                   setShowAuth(true);
                 } else {
                   setCurrentView(v);
                 }
               }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${currentView === v ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'text-slate-600 hover:text-slate-800'}`}>
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 5,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  background: currentView === v ? 'rgba(99,102,241,0.12)' : 'none',
+                  color: currentView === v ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.40)',
+                  border: currentView === v ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'color 150ms ease, background 150ms ease, border-color 150ms ease',
+                }}
+                onMouseEnter={e => { if (currentView !== v) (e.currentTarget).style.color = 'rgba(255,255,255,0.70)'; }}
+                onMouseLeave={e => { if (currentView !== v) (e.currentTarget).style.color = 'rgba(255,255,255,0.40)'; }}
+              >
                 {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : 'Learn'}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Auth / menu button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={() => setShowAuth(true)}
-              className="hidden md:flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-800 transition-colors px-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-600"
+              style={{
+                fontSize: 11, fontWeight: 500, letterSpacing: '0.06em',
+                color: 'rgba(255,255,255,0.55)',
+                background: 'none', border: '1px solid rgba(255,255,255,0.10)',
+                padding: '6px 14px', borderRadius: 5, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'color 150ms ease, border-color 150ms ease',
+              }}
+              onMouseEnter={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.85)'; }}
+              onMouseLeave={e => { (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.10)'; (e.currentTarget).style.color = 'rgba(255,255,255,0.55)'; }}
             >
-              <LogIn size={14} /> Sign In
+              <LogIn size={13} /> Sign In
             </button>
-            <button className="md:hidden text-slate-600" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <XIcon size={20} /> : <Menu size={20} />}
+            <button
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.50)', display: 'flex', alignItems: 'center' }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <XIcon size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-slate-50/95 backdrop-blur-xl px-6 py-3 flex flex-col gap-2">
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,5,5,0.95)', padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {(['landing', 'builder', 'results', 'news', 'learn'] as ViewType[]).map(v => (
               <button key={v} onClick={() => { setCurrentView(v); setMobileMenuOpen(false); }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium text-left transition-all ${currentView === v ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600'}`}>
+                style={{
+                  padding: '9px 14px', borderRadius: 6,
+                  fontSize: 12, fontWeight: 500, textAlign: 'left',
+                  color: currentView === v ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.45)',
+                  background: currentView === v ? 'rgba(99,102,241,0.10)' : 'none',
+                  border: 'none', cursor: 'pointer',
+                }}>
                 {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : 'Learn'}
               </button>
             ))}
             <button
-              onClick={() => {
-                setShowAuth(true)
-                setMobileMenuOpen(false)
-              }}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-left text-indigo-600"
+              onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }}
+              style={{ padding: '9px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500, textAlign: 'left', color: '#818CF8', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Sign In
             </button>
@@ -797,7 +839,7 @@ export default function App() {
 
       <AuthDialog open={showAuth} onClose={() => setShowAuth(false)} setCurrentView={setCurrentView} />
 
-      <div className="relative z-10 pt-16">
+      <div style={{ paddingTop: 52 }}>
         {currentView === 'landing' && <LandingView setCurrentView={(v: string) => setCurrentView(v as ViewType)} setShowAuth={setShowAuth} />}
         {currentView === 'builder' && <BuilderView setCurrentView={(v: string) => setCurrentView(v as ViewType)} />}
         {currentView === 'results' && <ResultsView equityData={equityData} metrics={metrics} metricTab={metricTab} setMetricTab={setMetricTab} setCurrentView={setCurrentView} />}
@@ -838,10 +880,10 @@ function CustomTooltip({ active, payload, label }: any) {
   const year = 2004 + Math.floor(monthIdx / 12);
   const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIdx % 12];
   return (
-    <div className="bg-white/95 border border-slate-200 rounded-xl p-3 text-sm">
-      <p className="text-slate-600 text-xs mb-1">{month} {year}</p>
-      <p className="text-rose-700">Your Strategy: ${payload[0]?.value?.toLocaleString()}</p>
-      <p className="text-emerald-700">S&P 500: ${payload[1]?.value?.toLocaleString()}</p>
+    <div style={{ background: 'linear-gradient(180deg,#1A1A1A 0%,#111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '12px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.50)' }}>
+      <p style={{ fontSize: 10, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace' }}>{month} {year}</p>
+      <p style={{ fontSize: 12, color: '#818CF8', fontFamily: 'JetBrains Mono, monospace' }}>Strategy: ${payload[0]?.value?.toLocaleString()}</p>
+      <p style={{ fontSize: 12, color: '#10B981', fontFamily: 'JetBrains Mono, monospace' }}>S&P 500: ${payload[1]?.value?.toLocaleString()}</p>
     </div>
   );
 }
@@ -856,7 +898,7 @@ function PerformanceChart({ data }: { data: any[] }) {
   ];
 
   return (
-    <div className="bg-white border border-slate-200/50 rounded-2xl p-6 mb-6">
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, marginBottom: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h2 className="text-slate-900 font-semibold text-lg">Portfolio Value Over Time</h2>
@@ -880,7 +922,7 @@ function PerformanceChart({ data }: { data: any[] }) {
                 <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v: number) => {
               if (v % 24 === 0) {
                 const labels = ["'04", "'06", "'08", "'10", "'12", "'14", "'16", "'18", "'20", "'22", "'24"];
@@ -913,11 +955,11 @@ function PerformanceChart({ data }: { data: any[] }) {
 
 function TradeHistoryTable() {
   return (
-    <div className="bg-white border border-slate-200/50 rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <List size={18} className="text-indigo-600" />
-        <h2 className="text-slate-900 font-semibold text-lg">Trade History</h2>
-        <span className="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full ml-2">214 trades</span>
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+        <List size={15} color="#818CF8" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.80)', letterSpacing: '-0.01em' }}>Trade History</p>
+        <span style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 500, color: '#818CF8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>214 trades</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -968,15 +1010,21 @@ function PerformanceMetrics({ metrics, tab, setTab }: any) {
   ];
 
   return (
-    <div className="bg-white border border-slate-200/50 rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Activity size={18} className="text-indigo-600" />
-        <h2 className="text-slate-900 font-semibold">Performance Metrics</h2>
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <Activity size={15} color="#818CF8" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.80)' }}>Performance Metrics</p>
       </div>
-      <div className="flex gap-2 mb-4">
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
         {(['strategy', 'sp500'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all ${tab === t ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-transparent hover:text-slate-800'}`}>
+            style={{
+              fontSize: 10, padding: '5px 12px', borderRadius: 4,
+              background: tab === t ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
+              color: tab === t ? '#818CF8' : 'rgba(255,255,255,0.40)',
+              border: tab === t ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(255,255,255,0.06)',
+              cursor: 'pointer', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase',
+            }}>
             {t === 'strategy' ? 'Your Strategy' : 'S&P 500'}
           </button>
         ))}
@@ -1011,30 +1059,28 @@ function PerformanceMetrics({ metrics, tab, setTab }: any) {
 
 function VerdictPanel({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50 border-2 border-indigo-200 shadow-[0_0_40px_rgba(99,102,241,0.12)] rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Gavel size={16} className="text-indigo-600" />
-        <span className="text-indigo-600 text-xs font-bold tracking-widest">THE VERDICT</span>
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(99,102,241,0.06)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <Gavel size={14} color="#818CF8" strokeWidth={1.5} />
+        <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#818CF8' }}>THE VERDICT</span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4">
-          <p className="text-rose-600 text-xs font-bold tracking-wider mb-2">YOUR STRATEGY</p>
-          <p className="text-3xl font-bold text-rose-700">+47%</p>
-          <p className="text-slate-500 text-xs">Total Return</p>
-          <TrendingDown size={18} className="text-rose-600 mt-2" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: 8, padding: 16 }}>
+          <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F43F5E', marginBottom: 6 }}>YOUR STRATEGY</p>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 28, fontWeight: 500, color: '#F43F5E' }}>+47%</p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', marginTop: 2 }}>Total Return</p>
         </div>
-        <div className="bg-emerald-500/5 border border-emerald-200 rounded-xl p-4 relative">
-          <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">WINNER</span>
-          <p className="text-emerald-600 text-xs font-bold tracking-wider mb-2">S&P 500</p>
-          <p className="text-3xl font-bold text-emerald-700">+332%</p>
-          <p className="text-slate-500 text-xs">Total Return</p>
-          <TrendingUp size={18} className="text-emerald-600 mt-2" />
+        <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 8, padding: 16, position: 'relative' }}>
+          <span style={{ position: 'absolute', top: 8, right: 8, background: '#10B981', color: 'white', fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, letterSpacing: '0.06em' }}>WINNER</span>
+          <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#10B981', marginBottom: 6 }}>S&P 500</p>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 28, fontWeight: 500, color: '#10B981' }}>+332%</p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', marginTop: 2 }}>Total Return</p>
         </div>
       </div>
-      <p className="text-slate-700 text-sm text-center mt-4 leading-relaxed">
-        The index beat your strategy by <span className="text-indigo-600 font-semibold">285 percentage points</span> over 20 years—without a single trade.
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.65, marginBottom: 10 }}>
+        The index beat your strategy by <span style={{ color: '#818CF8', fontWeight: 600 }}>285 percentage points</span> over 20 years—without a single trade.
       </p>
-      <p className="text-indigo-600 text-sm cursor-pointer mt-2 text-center hover:text-indigo-700 transition-colors" onClick={() => setCurrentView('news')}>
+      <p style={{ fontSize: 12, color: '#818CF8', cursor: 'pointer', textAlign: 'center' }} onClick={() => setCurrentView('news')}>
         Read related market news →
       </p>
     </div>
@@ -1046,10 +1092,10 @@ function VerdictPanel({ setCurrentView }: { setCurrentView: (v: ViewType) => voi
 function RiskAnalysis() {
   const badges = ['Beta: 0.89', 'Alpha: -1.2%', 'VaR (5%): -3.8%'];
   return (
-    <div className="bg-white border border-slate-200/50 rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <PieChart size={18} className="text-indigo-600" />
-        <h2 className="text-slate-900 font-semibold">Risk Analysis</h2>
+    <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <PieChart size={15} color="#818CF8" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.80)' }}>Risk Analysis</p>
       </div>
       <div className="flex justify-center">
         <ResponsiveContainer width={220} height={220}>
@@ -1121,37 +1167,45 @@ function NewsView({ setCurrentView }: any) {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-slate-900">Market News</h1>
-        <p className="text-slate-600 mt-1">Live updates and company-specific headlines.</p>
-
-        {/* Ticker Search Bar */}
-        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 w-full max-w-md flex items-center gap-3 mt-4 mb-8 relative shadow-sm hover:border-indigo-300 transition-colors focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
-          <Search size={18} className="text-slate-500" />
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '40px 40px 0', background: '#050505', minHeight: '100vh' }}>
+        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>MARKET INTELLIGENCE</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.90)', marginBottom: 4 }}>Market News</h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.40)', marginBottom: 28 }}>Live updates and company-specific headlines.</p>
+        {/* Ticker search bar — dark */}
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 7,
+          padding: '10px 14px',
+          width: '100%', maxWidth: 400,
+          display: 'flex', alignItems: 'center', gap: 10,
+          marginBottom: 28,
+        }}>
+          <Search size={15} color="rgba(255,255,255,0.30)" />
           <input
-            className="bg-transparent text-slate-800 placeholder-slate-400 outline-none w-full text-sm font-medium"
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.80)', outline: 'none', width: '100%', fontSize: 13, fontFamily: 'Inter, sans-serif' }}
             placeholder="Search by ticker — AAPL, TSLA, SPY..."
             value={searchInput}
             onChange={handleInputChange}
           />
           {searchInput && (
-            <button onClick={clearSearch} className="text-slate-400 hover:text-slate-600 p-1 flex-shrink-0 transition-colors">
-              <X size={16} />
+            <button onClick={clearSearch} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.30)', display: 'flex', alignItems: 'center' }}>
+              <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Feed Mode Indicator & Labels */}
-        <div className="flex justify-between items-end mb-6 border-b border-slate-200/60 pb-3 mt-4">
+        {/* Feed Mode */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 14 }}>
           <div>
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {!activeTicker ? (
                 <>
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
-                  <h2 className="text-lg font-bold text-slate-900">General Market News</h2>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px rgba(16,185,129,0.80)' }} className="animate-pulse" />
+                  <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.80)' }}>General Market News</h2>
                 </>
               ) : (
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.80)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   Showing news for: <span className="text-indigo-600">{activeTicker}</span>
                   {!loading && news && (
                     <span className="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-full font-bold ml-1 border border-indigo-100 shadow-sm">
@@ -1256,10 +1310,22 @@ function NewsView({ setCurrentView }: any) {
                 key={article.id}
                 variants={fadeUp}
                 onClick={() => window.open(article.url, '_blank')}
-                className="bg-white border border-slate-200/80 rounded-[2rem] hover:border-indigo-300 hover:shadow-xl transition-all duration-400 cursor-pointer group flex flex-col overflow-hidden relative"
+                style={{
+                  background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                  transition: 'border-color 200ms ease, box-shadow 200ms ease',
+                }}
+                onMouseEnter={(e: any) => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)'; e.currentTarget.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(99,102,241,0.08)'; }}
+                onMouseLeave={(e: any) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.06)'; }}
+                className="group"
               >
-                {/* Thumbnail Image */}
-                <div className="h-48 w-full relative overflow-hidden bg-slate-100 flex-shrink-0 border-b border-slate-100">
+                {/* Thumbnail */}
+                <div style={{ height: 180, width: '100%', position: 'relative', overflow: 'hidden', background: 'rgba(255,255,255,0.04)', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   {article.image ? (
                     <img
                       src={article.image}
@@ -1273,43 +1339,43 @@ function NewsView({ setCurrentView }: any) {
                   ) : (
                     <div className="w-full h-full" style={{ background: getPlaceholderGradient(article.source) }} />
                   )}
-                  {/* Source Badge */}
-                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-slate-100/50">
-                    <span className="text-[10px] font-bold text-slate-800 tracking-wider uppercase">{article.source}</span>
+                  {/* Source badge */}
+                  <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(8px)', padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.10)' }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.80)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>{article.source}</span>
                   </div>
-                  {/* Hover External Link icon */}
-                  <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg">
-                    <ExternalLink size={16} className="text-white" />
+                  {/* External link hover */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300" style={{ background: 'rgba(99,102,241,0.80)', backdropFilter: 'blur(8px)', padding: 6, borderRadius: 6 }}>
+                    <ExternalLink size={14} color="white" />
                   </div>
                 </div>
 
-                <div className="p-6 flex-1 flex flex-col bg-gradient-to-br from-white to-slate-50/50">
+                <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {/* Date & Category */}
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-slate-500 text-xs font-semibold tracking-wide flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'JetBrains Mono, monospace' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.20)', display: 'inline-block' }} />
                       {formatNewsDate(article.datetime)}
                     </span>
-                    <span className="bg-indigo-50 text-indigo-700 text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-sm border border-indigo-100/50">
+                    <span style={{ background: 'rgba(99,102,241,0.10)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.18)', fontSize: 9, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 3 }}>
                       {article.category}
                     </span>
                   </div>
 
                   {/* Headline */}
-                  <h3 className="text-lg font-bold text-slate-900 mb-3 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors duration-300" title={article.headline}>
+                  <h3 className="line-clamp-2" style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.01em', lineHeight: 1.45, marginBottom: 8 }} title={article.headline}>
                     {article.headline}
                   </h3>
 
                   {/* Summary */}
-                  <p className="text-slate-600 text-sm leading-relaxed flex-1 line-clamp-3">
+                  <p className="line-clamp-3" style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', lineHeight: 1.65, flex: 1 }}>
                     {article.summary}
                   </p>
 
-                  {/* Related Ticker Pill at bottom */}
+                  {/* Related tickers */}
                   {article.related && (
-                    <div className="mt-5 pt-4 border-t border-slate-200/60 flex flex-wrap gap-2">
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                       {article.related.split(',').slice(0, 3).map(ticker => (
-                        <span key={ticker} className="bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[10px] uppercase tracking-widest px-2.5 py-1 rounded font-bold shadow-sm">
+                        <span key={ticker} style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.18)', fontSize: 9, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 3 }}>
                           {ticker.trim()}
                         </span>
                       ))}

@@ -179,20 +179,20 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
         <AreaChart data={combined} margin={{ top: 12, right: 10, left: 8, bottom: 0 }}>
           <defs>
             <linearGradient id="strategyFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.2} />
-              <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="#818CF8" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="#818CF8" stopOpacity={0.01} />
             </linearGradient>
             <linearGradient id="benchmarkFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity={0.18} />
-              <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="#10b981" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="#10b981" stopOpacity={0.01} />
             </linearGradient>
           </defs>
 
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.22)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
 
           <XAxis
             dataKey="date"
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
             axisLine={false}
             tickLine={false}
             minTickGap={30}
@@ -200,7 +200,7 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
           />
 
           <YAxis
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
             axisLine={false}
             tickLine={false}
             width={56}
@@ -282,8 +282,8 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
           <Area
             type="monotone"
             dataKey="strategy"
-            stroke="#f43f5e"
-            strokeWidth={2.6}
+            stroke="#818CF8"
+            strokeWidth={2.2}
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="url(#strategyFill)"
@@ -293,7 +293,7 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
             type="monotone"
             dataKey="benchmark"
             stroke="#10b981"
-            strokeWidth={2.8}
+            strokeWidth={2.4}
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="url(#benchmarkFill)"
@@ -303,20 +303,24 @@ export function PortfolioChart({ portfolioSeries, benchmarkSeries }: Props) {
       </ResponsiveContainer>
 
       {notableBadges.length > 0 && (
-        <div className="flex flex-wrap gap-3 mt-5">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20 }}>
           {notableBadges.map((badge) => {
             const Icon = badge.icon
-            const toneClasses = badge.tone === 'emerald'
-              ? 'text-emerald-700 border-emerald-100 bg-slate-50'
-              : 'text-rose-700 border-rose-100 bg-slate-50'
-
             return (
               <div
                 key={`${badge.label}-${badge.value}`}
-                className={`rounded-2xl border px-4 py-3 flex items-center gap-3 text-sm shadow-sm ${toneClasses}`}
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${badge.tone === 'emerald' ? 'rgba(16,185,129,0.18)' : 'rgba(244,63,94,0.18)'}`,
+                  borderRadius: 5,
+                  padding: '5px 10px',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
               >
-                <Icon size={15} />
-                <span className="text-slate-700">{badge.label}: {badge.value}</span>
+                <Icon size={11} color={badge.tone === 'emerald' ? '#10B981' : '#F43F5E'} />
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {badge.label}: <span style={{ color: badge.tone === 'emerald' ? '#10B981' : '#F43F5E' }}>{badge.value}</span>
+                </span>
               </div>
             )
           })}
