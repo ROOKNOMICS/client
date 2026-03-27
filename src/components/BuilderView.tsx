@@ -1,19 +1,20 @@
 // 🎬 ROOKNOMICS CINEMATIC UI: BuilderView — dark precision instrument redesign
 // ZERO LOGIC CHANGES — all state, handlers, dispatch logic preserved exactly
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { fadeUp, staggerContainer } from '@/lib/animations';
 import {
   TrendingUp, TrendingDown, Activity,
-  Play, RotateCcw, Info, DollarSign, Sliders,
+  Play, RotateCcw, Info, DollarSign, Sliders, Save,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { runBacktest } from '@/store/backtestSlice';
-import { clearBacktest } from '@/store/backtestSlice';
-import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
+import type { RootState } from '@/store';
+import { runBacktest, saveBacktest, clearBacktest } from '@/store/backtestSlice';
 import type { AppDispatch } from '../store/index';
 
 // 🎬 ROOKNOMICS CINEMATIC UI: Shared style tokens
@@ -88,7 +89,10 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
   const [stopLossPercent, setStopLossPercent] = useState(10);
   const [takeProfit, setTakeProfit] = useState(false);
   const [takeProfitPercent, setTakeProfitPercent] = useState(20);
+  const [backtestName, setBacktestName] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const backtestState = useSelector((state: RootState) => state.backtest);
 
   // 🎬 All handlers identical — zero logic change
   const handleRunBacktest = async () => {
@@ -103,10 +107,65 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
     const result = { symbol, startDate, endDate, capital: initialCapital, activeRules, rulesConfig };
     dispatch(clearBacktest());
     try {
+      // Run the backtest and show results immediately
       await dispatch(runBacktest({ ...result })).unwrap();
       setCurrentView('results');
+      
+      // Save in background without blocking UI
+      const defaultName = `${symbol} Strategy - ${new Date().toLocaleDateString()}`;
+      dispatch(saveBacktest({
+        name: defaultName,
+        symbol,
+        startDate,
+        endDate,
+        capital: initialCapital,
+        activeRules,
+        rulesConfig
+      })).unwrap().then(() => {
+        console.log('Backtest saved automatically with name:', defaultName);
+        toast.success(`Backtest saved as "${defaultName}"`);
+      }).catch((saveError) => {
+        console.error('Auto-save failed:', saveError);
+        // Don't show error for auto-save to not disrupt user experience
+      });
     } catch (err) {
       console.error('Backtest failed', err);
+    }
+  };
+
+  const handleSaveBacktest = async () => {
+    if (!backtestName.trim()) {
+      toast.error('Please enter a name for your backtest');
+      return;
+    }
+
+    const activeRules = [];
+    if (useMA) { activeRules.push('MA Crossover'); }
+    if (useRSI) { activeRules.push('RSI Entry'); }
+    if (stopLoss) { activeRules.push('Stop Loss'); }
+    
+    const rulesConfig = {
+      rsi: { enabled: useRSI, period: rsiPeriod, buyBelow: rsiBuy, sellAbove: rsiSell },
+      maCross: { enabled: useMA, type: maType, fastPeriod: maShort, slowPeriod: maLong },
+    };
+
+    try {
+      await dispatch(saveBacktest({
+        name: backtestName.trim(),
+        symbol,
+        startDate,
+        endDate,
+        capital: initialCapital,
+        activeRules,
+        rulesConfig
+      })).unwrap();
+      
+      setShowSaveDialog(false);
+      setBacktestName('');
+      toast.success('Backtest saved successfully!');
+    } catch (err) {
+      console.error('Save failed', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to save backtest');
     }
   };
 
@@ -490,29 +549,112 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
               onMouseEnter={e => { if (canRun) { (e.currentTarget).style.background = '#4F46E5'; (e.currentTarget).style.boxShadow = '0 0 30px rgba(99,102,241,0.35)'; } }}
               onMouseLeave={e => { if (canRun) { (e.currentTarget).style.background = '#6366F1'; (e.currentTarget).style.boxShadow = '0 0 20px rgba(99,102,241,0.20)'; } }}
             >
-              <Play size={14} strokeWidth={2} /> Run Backtest
+              {backtestState.loading ? (
+                <>
+                  <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  Running Backtest...
+                </>
+              ) : backtestState.saveLoading ? (
+                <>
+                  <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  Saving to Database...
+                </>
+              ) : (
+                <>
+                  <Play size={14} />
+                  Run Backtest & Save
+                </>
+              )}
             </button>
+            
             <button
-              onClick={handleReset}
+              onClick={() => setShowSaveDialog(true)}
+              disabled={!canRun}
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'rgba(255,255,255,0.50)',
+                background: 'rgba(255,255,255,0.06)',
+                color: canRun ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)',
                 fontWeight: 500,
-                fontSize: 13,
-                padding: '10px',
+                fontSize: 12,
+                padding: '11px',
                 borderRadius: 6,
-                border: '1px solid rgba(255,255,255,0.06)',
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'background 150ms ease',
+                border: '1px solid rgba(255,255,255,0.10)',
+                cursor: canRun ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'background 150ms ease, border-color 150ms ease',
               }}
-              onMouseEnter={e => { (e.currentTarget).style.background = 'rgba(255,255,255,0.06)'; }}
-              onMouseLeave={e => { (e.currentTarget).style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseEnter={e => { if (canRun) { (e.currentTarget).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.15)'; } }}
+              onMouseLeave={e => { if (canRun) { (e.currentTarget).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget).style.borderColor = 'rgba(255,255,255,0.10)'; } }}
             >
-              <RotateCcw size={12} /> Reset to Defaults
+              <Save size={13} />
+              Save Strategy
             </button>
           </motion.div>
+
+          {/* Save Dialog */}
+          {showSaveDialog && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.60)', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+            }}>
+              <div style={{
+                background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)',
+                border: '1px solid rgba(255,255,255,0.10)', borderRadius: 12,
+                padding: 24, width: '90%', maxWidth: 400,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.40)',
+              }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.90)' }}>
+                  Save Backtest Strategy
+                </h3>
+                <p style={{ margin: '0 0 20px 0', fontSize: 13, color: 'rgba(255,255,255,0.60)', lineHeight: 1.4 }}>
+                  Give your backtest strategy a name so you can find it later in your profile.
+                </p>
+                <input
+                  type="text"
+                  placeholder="e.g., AAPL Momentum Strategy"
+                  value={backtestName}
+                  onChange={(e) => setBacktestName(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 6,
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)',
+                    color: 'rgba(255,255,255,0.90)', fontSize: 13,
+                    outline: 'none', marginBottom: 20,
+                  }}
+                  autoFocus
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      setShowSaveDialog(false);
+                      setBacktestName('');
+                    }}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 6,
+                      background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.70)',
+                      border: '1px solid rgba(255,255,255,0.10)', fontSize: 13, fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveBacktest}
+                    disabled={!backtestName.trim() || backtestState.saveLoading}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 6,
+                      background: backtestName.trim() && !backtestState.saveLoading ? '#6366F1' : 'rgba(255,255,255,0.06)',
+                      color: backtestName.trim() && !backtestState.saveLoading ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.30)',
+                      border: 'none', fontSize: 13, fontWeight: 600,
+                      cursor: backtestName.trim() && !backtestState.saveLoading ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {backtestState.saveLoading ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Pro tip card */}
           <motion.div variants={fadeUp} style={{

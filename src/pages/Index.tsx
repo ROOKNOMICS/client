@@ -52,6 +52,7 @@ export type CandidateArray = { key: string; value: any };
 import LandingView from '@/components/LandingView';
 import BuilderView from '@/components/BuilderView';
 import AuthDialog from '@/components/AuthDialog';
+import ProfilePage from './Profile';
 import {
   generateEquityData, tradeHistory, radarData, conceptCards,
   metricsStrategy, metricsSP500,
@@ -61,7 +62,7 @@ import { useMarketNews } from '@/hooks/useMarketNews';
 import { formatNewsDate, getPlaceholderGradient } from '@/utils/newsHelpers';
 
 
- export type ViewType = 'landing' | 'builder' | 'results' | 'news' | 'learn';
+ export type ViewType = 'landing' | 'builder' | 'results' | 'news' | 'learn' | 'profile';
 
 const iconMap: Record<string, React.ElementType> = {
   TrendingUp,
@@ -764,7 +765,7 @@ export default function App() {
 
           {/* Desktop nav links */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {(['landing', 'builder', 'results', 'news', 'learn'] as ViewType[]).map(v => (
+            {(['landing', 'builder', 'results', 'news', 'learn', 'profile'] as ViewType[]).map(v => (
               <button key={v} onClick={() => {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -789,7 +790,7 @@ export default function App() {
                 onMouseEnter={e => { if (currentView !== v) (e.currentTarget).style.color = 'rgba(255,255,255,0.70)'; }}
                 onMouseLeave={e => { if (currentView !== v) (e.currentTarget).style.color = 'rgba(255,255,255,0.40)'; }}
               >
-                {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : 'Learn'}
+                {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : v === 'learn' ? 'Learn' : 'Profile'}
               </button>
             ))}
           </div>
@@ -843,7 +844,7 @@ export default function App() {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,5,5,0.95)', padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {(['landing', 'builder', 'results', 'news', 'learn'] as ViewType[]).map(v => (
+            {(['landing', 'builder', 'results', 'news', 'learn', 'profile'] as ViewType[]).map(v => (
               <button key={v} onClick={() => { setCurrentView(v); setMobileMenuOpen(false); }}
                 style={{
                   padding: '9px 14px', borderRadius: 6,
@@ -852,7 +853,7 @@ export default function App() {
                   background: currentView === v ? 'rgba(99,102,241,0.10)' : 'none',
                   border: 'none', cursor: 'pointer',
                 }}>
-                {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : 'Learn'}
+                {v === 'landing' ? 'Home' : v === 'builder' ? 'Builder' : v === 'results' ? 'Results' : v === 'news' ? 'News' : v === 'learn' ? 'Learn' : 'Profile'}
               </button>
             ))}
             {isLoggedIn ? (
@@ -882,6 +883,7 @@ export default function App() {
         {currentView === 'results' && <ResultsView equityData={equityData} metrics={metrics} metricTab={metricTab} setMetricTab={setMetricTab} setCurrentView={setCurrentView} />}
         {currentView === 'news' && <NewsView setCurrentView={setCurrentView} />}
         {currentView === 'learn' && <LearnPage setCurrentView={(v: string) => setCurrentView(v as ViewType)} />}
+        {currentView === 'profile' && <ProfilePage setCurrentView={(v: string) => setCurrentView(v as ViewType)} />}
       </div>
     </div>
   );
@@ -891,18 +893,126 @@ export default function App() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ResultsView({ equityData, metrics, metricTab, setMetricTab, setCurrentView }: any) {
+  const [backtestData, setBacktestData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const backtestState = useSelector((state: RootState) => state.backtest);
+
+  useEffect(() => {
+    // First check if we have fresh backtest data from Redux
+    if (backtestState.data && Object.keys(backtestState.data).length > 0) {
+      console.log('Using fresh backtest data from Redux:', backtestState.data);
+      setBacktestData(backtestState.data);
+    } else {
+      // Fall back to localStorage for saved backtests
+      const savedData = localStorage.getItem('currentBacktestData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          console.log('Using saved backtest data from localStorage:', parsedData);
+          setBacktestData(parsedData);
+        } catch (error) {
+          console.error('Failed to parse backtest data:', error);
+        }
+      }
+    }
+    setLoading(false);
+  }, [backtestState.data]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <div style={{ width: 40, height: 40, border: '2px solid rgba(255,255,255,0.1)', borderTop: '2px solid #6366F1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    );
+  }
+
+  if (!backtestData) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', gap: 16 }}>
+        <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.60)' }}>No backtest data available</div>
+        <button
+          onClick={() => setCurrentView('profile')}
+          style={{
+            padding: '10px 20px', borderRadius: 6,
+            background: '#6366F1', color: 'white',
+            border: 'none', fontSize: 14, fontWeight: 500,
+            cursor: 'pointer'
+          }}
+        >
+          View Your Backtests
+        </button>
+      </div>
+    );
+  }
+
+  // Use real backtest data instead of mock data
+  // Handle both possible field names (with and without typo)
+  const portfolioMetrics = backtestData.portfolioMetrics || backtestData.portfolioMatrics || {};
+  const benchmarkMetrics = backtestData.benchmarkMetrics || backtestData.benchmarkMatrics || {};
+  
+  console.log('Using portfolioMetrics:', portfolioMetrics);
+  console.log('Using benchmarkMetrics:', benchmarkMetrics);
+  
+  const realEquityData = (backtestData.combinedData || []).map((item: any, index: number) => ({
+    month: index, // Chart expects month as index
+    date: item.date,
+    user: item.strategy || 0, // Chart expects 'user' for strategy
+    sp500: item.benchmark || 0, // Chart expects 'sp500' for benchmark
+    strategy: item.strategy || 0, // Keep original for reference
+    benchmark: item.benchmark || 0 // Keep original for reference
+  }));
+
+  const realMetrics = {
+    totalReturn: portfolioMetrics.totalReturn || 0,
+    annualizedReturn: portfolioMetrics.annualizedReturn || 0,
+    maxDrawdown: portfolioMetrics.maxDrawdown || 0,
+    winRate: portfolioMetrics.winRate || null,
+    sharpeRatio: portfolioMetrics.sharpeRatio || 0,
+    volatility: portfolioMetrics.volatility || 0,
+    totalTrades: portfolioMetrics.totalTrades || 0,
+    profitableTrades: portfolioMetrics.profitableTrades || 0,
+    avgTradeReturn: portfolioMetrics.avgTradeReturn || 0,
+    tradingFees: portfolioMetrics.tradingFees || 0
+  };
+
+  console.log('Real equity data:', realEquityData);
+  console.log('Real metrics:', realMetrics);
+  console.log('Backtest data structure:', backtestData);
+  console.log('Verdict data:', backtestData?.verdict);
+  console.log('Full backtestData keys:', Object.keys(backtestData || {}));
+
+  // Extract verdict data with fallbacks
+  const verdictData = backtestData?.verdict || 
+                      backtestData?.results?.verdict || 
+                      (backtestData?.benchmark && {
+                        type: backtestData.benchmark.strategy > backtestData.benchmark.benchmark ? 'OUTPERFORM' : 
+                              backtestData.benchmark.strategy < backtestData.benchmark.benchmark ? 'UNDERPERFORM' : 'NEUTRAL',
+                        title: 'Performance Analysis',
+                        desc: `Strategy returned ${backtestData.benchmark.strategy.toFixed(2)}% vs benchmark ${backtestData.benchmark.benchmark.toFixed(2)}%`
+                      }) ||
+                      null;
+
+  console.log('Extracted verdict data:', verdictData);
+
+  // If no real data, fall back to mock data for demonstration
+  const chartData = realEquityData.length > 0 ? realEquityData : equityData;
+  const displayMetrics = realMetrics.totalReturn !== 0 || realEquityData.length > 0 ? realMetrics : metrics;
+
+  console.log('Using chart data:', chartData);
+  console.log('Using display metrics:', displayMetrics);
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-6 pb-12 pt-8">
       {/* Chart area */}
       <div className="xl:col-span-3">
-        <PerformanceChart data={equityData} />
-        <TradeHistoryTable />
+        <PerformanceChart data={chartData} />
+        <TradeHistoryTable trades={backtestData?.tradeLog || []} />
       </div>
       {/* Sidebar */}
       <div className="xl:col-span-1 space-y-6">
-        <PerformanceMetrics metrics={metrics} tab={metricTab} setTab={setMetricTab} />
-        <VerdictPanel setCurrentView={setCurrentView} />
-        <RiskAnalysis />
+        <PerformanceMetrics metrics={displayMetrics} tab={metricTab} setTab={setMetricTab} />
+        <VerdictPanel verdict={verdictData} setCurrentView={setCurrentView} />
+        <RiskAnalysis metrics={displayMetrics} />
       </div>
     </div>
   );
@@ -993,13 +1103,13 @@ function PerformanceChart({ data }: { data: any[] }) {
 
 /* ─── TRADE HISTORY ───────────────────────────────────────────── */
 
-function TradeHistoryTable() {
+function TradeHistoryTable({ trades = [] }: { trades?: any[] }) {
   return (
     <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
         <List size={15} color="#818CF8" strokeWidth={1.5} />
         <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.80)', letterSpacing: '-0.01em' }}>Trade History</p>
-        <span style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 500, color: '#818CF8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>214 trades</span>
+        <span style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 500, color: '#818CF8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{trades.length} trades</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -1011,23 +1121,45 @@ function TradeHistoryTable() {
             </tr>
           </thead>
           <tbody>
-            {tradeHistory.map((row, i) => (
+            {trades.length > 0 ? trades.map((trade, i) => (
               <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
-                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace' }}>{row.date}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, fontWeight: 600, color: row.action === 'BUY' ? '#818CF8' : '#F59E0B', fontFamily: 'JetBrains Mono, monospace' }}>{row.action}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.price}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.shares}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, fontWeight: 500, color: row.positive === true ? '#10B981' : row.positive === false ? '#F43F5E' : 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{row.pnl}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, color: row.positive === true ? '#10B981' : row.positive === false ? '#F43F5E' : 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{row.ret}</td>
-                <td style={{ padding: '9px 12px', fontSize: 11, color: 'rgba(255,255,255,0.60)', fontFamily: 'JetBrains Mono, monospace' }}>{row.cum}</td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  {new Date(trade.date).toLocaleDateString()}
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}>
+                  <span style={{ 
+                    padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 500,
+                    background: trade.type === 'BUY' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+                    color: trade.type === 'BUY' ? '#10B981' : '#F43F5E'
+                  }}>
+                    {trade.type}
+                  </span>
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  ${trade.price.toFixed(2)}
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  {trade.shares || '-'}
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  {trade.pnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '-'}
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  {trade.return ? `${trade.return >= 0 ? '+' : ''}${trade.return.toFixed(2)}%` : '-'}
+                </td>
+                <td style={{ padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.70)' }}>
+                  {trade.cumulative ? `$${trade.cumulative.toFixed(2)}` : '-'}
+                </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan={7} style={{ padding: '20px', textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.50)' }}>
+                  No trades executed during this period
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'JetBrains Mono, monospace' }}>Showing 8 of 214 trades</span>
-        <span style={{ fontSize: 10, color: '#818CF8', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace' }}>View All →</span>
       </div>
     </div>
   );
@@ -1046,7 +1178,7 @@ function PerformanceMetrics({ metrics, tab, setTab }: any) {
     { label: 'Sharpe Ratio', value: metrics.sharpeRatio, color: 'text-slate-900' },
     { label: 'Avg Trade Duration', value: metrics.avgTradeDuration, color: 'text-slate-700' },
     { label: 'Total Trades', value: metrics.totalTrades, color: 'text-slate-700' },
-    { label: 'Trading Fees Paid', value: metrics.tradingFees, color: metrics.tradingFees.startsWith('-') ? 'text-rose-600' : 'text-slate-700' },
+    { label: 'Trading Fees Paid', value: metrics.tradingFees, color: metrics.tradingFees < 0 ? 'text-rose-600' : 'text-slate-700' },
   ];
 
   return (
@@ -1097,40 +1229,72 @@ function PerformanceMetrics({ metrics, tab, setTab }: any) {
 
 /* ─── VERDICT ─────────────────────────────────────────────────── */
 
-function VerdictPanel({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
+function VerdictPanel({ verdict, setCurrentView }: { verdict?: any, setCurrentView: (v: ViewType) => void }) {
+  // Debug logging
+  console.log('VerdictPanel received verdict:', verdict);
+  
+  const getVerdictColor = (type: string) => {
+    switch (type) {
+      case 'OUTPERFORM': return { bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.18)', text: '#10B981', badge: '#10B981' };
+      case 'UNDERPERFORM': return { bg: 'rgba(244,63,94,0.06)', border: 'rgba(244,63,94,0.18)', text: '#F43F5E', badge: '#F43F5E' };
+      default: return { bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.18)', text: '#F59E0B', badge: '#F59E0B' };
+    }
+  };
+
+  const colors = verdict ? getVerdictColor(verdict.type) : getVerdictColor('NEUTRAL');
+  
   return (
     <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(99,102,241,0.20)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(99,102,241,0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <Gavel size={14} color="#818CF8" strokeWidth={1.5} />
         <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#818CF8' }}>THE VERDICT</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-        <div style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: 8, padding: 16 }}>
-          <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F43F5E', marginBottom: 6 }}>YOUR STRATEGY</p>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 28, fontWeight: 500, color: '#F43F5E' }}>+47%</p>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', marginTop: 2 }}>Total Return</p>
+      
+      {verdict ? (
+        <>
+          <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: 16, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ background: colors.badge, color: 'white', fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 3, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                {verdict.type || 'NEUTRAL'}
+              </span>
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: colors.text, marginBottom: 6 }}>{verdict.title || 'Strategy Analysis Complete'}</h3>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.60)', lineHeight: 1.4 }}>{verdict.desc || 'Your strategy has been analyzed against the benchmark.'}</p>
+          </div>
+          
+          <button
+            onClick={() => setCurrentView('builder')}
+            style={{
+              width: '100%', padding: '10px', borderRadius: 6,
+              background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+              color: '#818CF8', fontSize: 12, fontWeight: 500,
+              cursor: 'pointer', transition: 'background 150ms ease'
+            }}
+            onMouseEnter={(e) => { (e.currentTarget).style.background = 'rgba(99,102,241,0.15)'; }}
+            onMouseLeave={(e) => { (e.currentTarget).style.background = 'rgba(99,102,241,0.1)'; }}
+          >
+            Run New Backtest
+          </button>
+        </>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.50)' }}>No verdict data available</p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', marginTop: 4 }}>Run a backtest to see analysis</p>
         </div>
-        <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 8, padding: 16, position: 'relative' }}>
-          <span style={{ position: 'absolute', top: 8, right: 8, background: '#10B981', color: 'white', fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, letterSpacing: '0.06em' }}>WINNER</span>
-          <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#10B981', marginBottom: 6 }}>S&P 500</p>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 28, fontWeight: 500, color: '#10B981' }}>+332%</p>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', marginTop: 2 }}>Total Return</p>
-        </div>
-      </div>
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.65, marginBottom: 10 }}>
-        The index beat your strategy by <span style={{ color: '#818CF8', fontWeight: 600 }}>285 percentage points</span> over 20 years—without a single trade.
-      </p>
-      <p style={{ fontSize: 12, color: '#818CF8', cursor: 'pointer', textAlign: 'center' }} onClick={() => setCurrentView('news')}>
-        Read related market news →
-      </p>
+      )}
     </div>
   );
 }
 
 /* ─── RISK ANALYSIS ───────────────────────────────────────────── */
 
-function RiskAnalysis() {
-  const badges = ['Beta: 0.89', 'Alpha: -1.2%', 'VaR (5%): -3.8%'];
+function RiskAnalysis({ metrics }: { metrics?: any }) {
+  const badges = metrics ? [
+    `Sharpe: ${metrics.sharpeRatio?.toFixed(2) || '0.00'}`,
+    `Max DD: ${metrics.maxDrawdown?.toFixed(1) || '0.0'}%`,
+    `Volatility: ${metrics.volatility?.toFixed(1) || '0.0'}%`
+  ] : ['Beta: 0.89', 'Alpha: -1.2%', 'VaR (5%): -3.8%'];
+  
   return (
     <div style={{ background: 'linear-gradient(180deg,#141414 0%,#0D0D0D 100%)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
