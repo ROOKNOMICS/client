@@ -13,6 +13,7 @@ import { runBacktest } from '@/store/backtestSlice';
 import { clearBacktest } from '@/store/backtestSlice';
 import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '../store/index'
+import { apiRequest } from '@/lib/api'
 
 interface BuilderViewProps {
   setCurrentView: (v: string) => void;
@@ -206,10 +207,21 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
       maCross: { enabled: useMA, type: maType, fastPeriod: maShort, slowPeriod: maLong },
     };
 
+    const strategy = { symbol, startDate, endDate, capital: initialCapital, activeRules, rulesConfig };
+
     dispatch(clearBacktest());
     setIsRunning(true);
     try {
-      await dispatch(runBacktest({ symbol, startDate, endDate, capital: initialCapital, activeRules, rulesConfig })).unwrap();
+      const result = await dispatch(runBacktest(strategy)).unwrap();
+      apiRequest('/simulations', {
+        method: 'POST',
+        body: JSON.stringify({
+          strategy,
+          performance: result.performance,
+          trades: result.trades,
+          verdict: result.verdict,
+        }),
+      }).catch(() => {});
       setCurrentView('results');
     } catch (err) {
       console.error('Backtest failed', err);
