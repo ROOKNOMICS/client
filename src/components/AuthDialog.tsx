@@ -6,9 +6,6 @@ import OtpDialog from './OtpDialog';
 import { useAuth } from '../hooks/useAuth.js';
 import type { GoogleAuthPayload } from '../lib/api';
 
-// ── Google button lives in its own component so useGoogleLogin is only ────────
-// called when VITE_GOOGLE_CLIENT_ID is actually configured. Calling the hook
-// with an empty clientId crashes the entire component tree.
 interface GoogleBtnProps {
   disabled: boolean;
   isLoading: boolean;
@@ -25,7 +22,7 @@ function GoogleLoginButton({ disabled, isLoading, onAuth }: GoogleBtnProps) {
         const g = await res.json();
         onAuth({ googleId: g.sub, email: g.email, name: g.name, avatar: g.picture });
       } catch {
-        // errors bubble up via googleError Redux state
+        // surfaced via Redux state
       }
     },
   });
@@ -54,11 +51,9 @@ function GoogleLoginButton({ disabled, isLoading, onAuth }: GoogleBtnProps) {
   );
 }
 
-// ── Main dialog ───────────────────────────────────────────────────────────────
 interface AuthDialogProps {
   open: boolean;
   onClose: () => void;
-  /** 'gate' = opened by AuthGuard when accessing a protected route */
   context?: 'gate';
 }
 
@@ -72,9 +67,9 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
   const [name, setName] = useState('');
 
   const {
-    handleLogin,    isLoginLoading,    loginError,    clearLoginError,
+    handleLogin, isLoginLoading, loginError, clearLoginError,
     handleRegister, isRegisterLoading, registerError, clearRegisterError,
-    handleGoogleAuth, isGoogleLoading, googleError,   clearGoogleError,
+    handleGoogleAuth, isGoogleLoading, googleError, clearGoogleError,
     isLoggedIn,
     otpSent,
     resetAuth,
@@ -82,10 +77,12 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
 
   useEffect(() => {
     if (isLoggedIn && open) handleClose();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, open]);
 
   const handleClose = () => {
-    setEmail(''); setPassword(''); setName('');
+    setEmail('');
+    setPassword('');
+    setName('');
     setShowPassword(false);
     setMode('login');
     resetAuth();
@@ -94,13 +91,20 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
 
   const handleModeSwitch = (newMode: 'login' | 'signup') => {
     setMode(newMode);
-    setEmail(''); setPassword(''); setName('');
-    clearLoginError(); clearRegisterError(); clearGoogleError();
+    setEmail('');
+    setPassword('');
+    setName('');
+    clearLoginError();
+    clearRegisterError();
+    clearGoogleError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'signup') { await handleRegister(name, email, password); return; }
+    if (mode === 'signup') {
+      await handleRegister(name, email, password);
+      return;
+    }
     await handleLogin(email, password);
   };
 
@@ -116,8 +120,8 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
   }
 
   const isEmailLoading = mode === 'login' ? isLoginLoading : isRegisterLoading;
-  const isAnyLoading   = isEmailLoading || isGoogleLoading;
-  const displayError   = (mode === 'login' ? loginError : registerError) || googleError;
+  const isAnyLoading = isEmailLoading || isGoogleLoading;
+  const displayError = (mode === 'login' ? loginError : registerError) || googleError;
 
   const headline = context === 'gate'
     ? 'Sign in to continue'
@@ -159,7 +163,6 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
               <div className="relative p-6">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15),transparent_65%)]" />
 
-                {/* Header */}
                 <div className="relative mb-6 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-400/10">
@@ -182,9 +185,7 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                 <h2 className="mb-1 text-2xl font-bold text-[#EAEAEA]">{headline}</h2>
                 <p className="mb-6 text-sm text-[#7A7A7A]">{subline}</p>
 
-                {/* OAuth buttons */}
                 <div className="mb-6 grid grid-cols-2 gap-3">
-                  {/* Google — only mounts the real hook when clientId is configured */}
                   {GOOGLE_ENABLED ? (
                     <GoogleLoginButton
                       disabled={isAnyLoading}
@@ -196,7 +197,7 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                       type="button"
                       disabled
                       title="Google sign-in not configured"
-                      className="flex items-center justify-center gap-2 rounded-xl border border-[#1A1A1A] bg-[#111111] py-2.5 text-sm font-medium text-[#3A3A3A] cursor-not-allowed"
+                      className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#1A1A1A] bg-[#111111] py-2.5 text-sm font-medium text-[#3A3A3A]"
                     >
                       <svg className="h-4 w-4 opacity-30" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -208,7 +209,6 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                     </button>
                   )}
 
-                  {/* Apple — UI only, no backend endpoint yet */}
                   <button
                     type="button"
                     disabled={isAnyLoading}
@@ -227,7 +227,6 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                   <div className="h-px flex-1 bg-[#1A1A1A]" />
                 </div>
 
-                {/* Error */}
                 <AnimatePresence>
                   {displayError && (
                     <motion.div
@@ -244,7 +243,6 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                   )}
                 </AnimatePresence>
 
-                {/* Email form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {mode === 'signup' && (
                     <div className="relative">
@@ -253,7 +251,10 @@ export default function AuthDialog({ open, onClose, context }: AuthDialogProps) 
                         type="text"
                         placeholder="Full name"
                         value={name}
-                        onChange={(e) => { setName(e.target.value); clearRegisterError(); }}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          clearRegisterError();
+                        }}
                         disabled={isAnyLoading}
                         required
                         className={`${inputCls} pl-10 pr-4`}

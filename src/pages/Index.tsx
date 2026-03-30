@@ -1023,7 +1023,12 @@ export default function App() {
       />
 
       <div className="relative z-10 pt-12">
-        {currentView === 'landing' && <LandingView setCurrentView={(v: string) => setCurrentView(v as ViewType)} setShowAuth={setShowAuth} />}
+        {currentView === 'landing' && (
+          <LandingView
+            setCurrentView={(v: string) => handleNavigate(v as ViewType)}
+            setShowAuth={setShowAuth}
+          />
+        )}
         {currentView === 'builder' && (
           isLoggedIn
             ? <BuilderView setCurrentView={(v: string) => setCurrentView(v as ViewType)} />

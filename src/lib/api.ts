@@ -1,8 +1,24 @@
-// src/lib/api.ts
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+function tryParseJson(raw: string) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
-// ── Core request helper ───────────────────────────────────
+function toErrorMessage(status: number, data: any, raw: string) {
+  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
+  if (typeof data?.error === 'string' && data.error.trim()) return data.error;
+
+  const text = raw.trim();
+  if (text && !text.startsWith('<')) return text;
+
+  return `Request failed (${status})`;
+}
+
 export async function apiRequest<T = any>(
   url: string,
   options: RequestInit = {}
@@ -11,6 +27,7 @@ export async function apiRequest<T = any>(
 
   const res = await fetch(`${BASE_URL}${url}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -18,16 +35,16 @@ export async function apiRequest<T = any>(
     },
   });
 
-  const data = await res.json();
+  const raw = await res.text();
+  const data = tryParseJson(raw);
 
   if (!res.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    throw new Error(toErrorMessage(res.status, data, raw));
   }
 
-  return data;
+  return (data ?? (raw as T)) as T;
 }
 
-// ── Shared types ──────────────────────────────────────────
 export interface AuthUser {
   id: string;
   name: string;
@@ -42,45 +59,42 @@ export interface GoogleAuthPayload {
   avatar?: string;
 }
 
-// ── All auth API calls in one place ──────────────────────
 export const authApi = {
-
-  // Step 1 of signup — sends OTP, does NOT create account yet
   register: (payload: { name: string; email: string; password: string }) =>
     apiRequest<{ message: string; email: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  // Step 2 of signup — verifies OTP then creates the real account
   verifyOtp: (payload: { email: string; otp: string }) =>
-    apiRequest<{ token: string; user: AuthUser; message: string }>('/auth/verify-otp', {
+    apiRequest<{ token?: string; user: AuthUser; message: string }>('/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  // Resend a fresh OTP to same email, resets the 10-min timer
   resendOtp: (payload: { email: string }) =>
     apiRequest<{ message: string }>('/auth/resend-otp', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  // Normal login — returns JWT immediately
   login: (payload: { email: string; password: string }) =>
-    apiRequest<{ token: string; user: AuthUser }>('/auth/login', {
+    apiRequest<{ token?: string; user: AuthUser }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  // Google OAuth — send decoded Google user payload, get JWT back
+  logout: () =>
+    apiRequest<{ message: string }>('/auth/logout', {
+      method: 'POST',
+    }),
+
   googleAuth: (payload: GoogleAuthPayload) =>
     apiRequest<{ token: string; user: AuthUser }>('/auth/google', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  // Protected — get current user from stored JWT (validates token server-side)
   getMe: () =>
     apiRequest<{ user: AuthUser }>('/auth/me'),
 };

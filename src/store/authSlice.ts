@@ -1,10 +1,7 @@
-// src/store/authSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi, AuthUser, GoogleAuthPayload } from '../lib/api';
+import { authApi } from '../lib/api';
+import type { AuthUser, GoogleAuthPayload } from '../lib/api';
 
-// ── Async thunks ──────────────────────────────────────────
-
-// STEP 1: Submit register form → sends OTP, does NOT log user in yet
 export const registerUser = createAsyncThunk(
   'auth/register',
   async (
@@ -12,14 +9,13 @@ export const registerUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      return await authApi.register(payload); // { message, email }
+      return await authApi.register(payload);
     } catch (err: any) {
       return rejectWithValue(err.message || 'Registration failed');
     }
   }
 );
 
-// STEP 2: Submit OTP → verifies, creates account, logs user in
 export const verifyOtpUser = createAsyncThunk(
   'auth/verifyOtp',
   async (
@@ -28,28 +24,26 @@ export const verifyOtpUser = createAsyncThunk(
   ) => {
     try {
       const data = await authApi.verifyOtp(payload);
-      localStorage.setItem('token', data.token);
+      if (data.token) localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      return data; // { token, user, message }
+      return data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'OTP verification failed');
     }
   }
 );
 
-// RESEND: Generate a fresh OTP
 export const resendOtpUser = createAsyncThunk(
   'auth/resendOtp',
   async (payload: { email: string }, { rejectWithValue }) => {
     try {
-      return await authApi.resendOtp(payload); // { message }
+      return await authApi.resendOtp(payload);
     } catch (err: any) {
       return rejectWithValue(err.message || 'Resend failed');
     }
   }
 );
 
-// LOGIN: Normal email + password login
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (
@@ -58,16 +52,28 @@ export const loginUser = createAsyncThunk(
   ) => {
     try {
       const data = await authApi.login(payload);
-      localStorage.setItem('token', data.token);
+      if (data.token) localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      return data; // { token, user }
+      return data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Login failed');
     }
   }
 );
 
-// GOOGLE AUTH: Google OAuth flow — send decoded payload, get JWT back
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      await authApi.logout();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Logout failed');
+    }
+  }
+);
+
 export const googleAuthUser = createAsyncThunk(
   'auth/google',
   async (payload: GoogleAuthPayload, { rejectWithValue }) => {
@@ -75,24 +81,21 @@ export const googleAuthUser = createAsyncThunk(
       const data = await authApi.googleAuth(payload);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      return data; // { token, user }
+      return data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Google sign-in failed');
     }
   }
 );
 
-// FETCH ME: Validate stored JWT and refresh user data from server
 export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
       const data = await authApi.getMe();
-      // Sync fresh user data back to localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
       return data.user;
     } catch (err: any) {
-      // Token expired or invalid — clear storage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       return rejectWithValue(err.message || 'Session expired');
@@ -100,174 +103,175 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-// ── State ─────────────────────────────────────────────────
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
-
-  isLoginLoading:    boolean;
+  isLoginLoading: boolean;
   isRegisterLoading: boolean;
-  isOtpLoading:      boolean;
-  isResendLoading:   boolean;
-  isGoogleLoading:   boolean;
-  isMeLoading:       boolean;
-
-  loginError:    string | null;
+  isOtpLoading: boolean;
+  isResendLoading: boolean;
+  isGoogleLoading: boolean;
+  isMeLoading: boolean;
+  loginError: string | null;
   registerError: string | null;
-  otpError:      string | null;
-  resendError:   string | null;
-  googleError:   string | null;
-
-  otpSent:    boolean;
+  otpError: string | null;
+  resendError: string | null;
+  googleError: string | null;
+  otpSent: boolean;
   isVerified: boolean;
 }
 
-// Rehydrate from localStorage on page refresh
+const savedUser = localStorage.getItem('user');
 const savedToken = localStorage.getItem('token');
-const savedUser  = localStorage.getItem('user');
 
 const initialState: AuthState = {
-  user:    savedUser  ? JSON.parse(savedUser)  : null,
-  token:   savedToken ?? null,
-
-  isLoginLoading:    false,
+  user: savedUser ? JSON.parse(savedUser) : null,
+  token: savedToken,
+  isLoginLoading: false,
   isRegisterLoading: false,
-  isOtpLoading:      false,
-  isResendLoading:   false,
-  isGoogleLoading:   false,
-  isMeLoading:       false,
-
-  loginError:    null,
+  isOtpLoading: false,
+  isResendLoading: false,
+  isGoogleLoading: false,
+  isMeLoading: false,
+  loginError: null,
   registerError: null,
-  otpError:      null,
-  resendError:   null,
-  googleError:   null,
-
-  otpSent:    false,
+  otpError: null,
+  resendError: null,
+  googleError: null,
+  otpSent: false,
   isVerified: false,
 };
 
-// ── Slice ─────────────────────────────────────────────────
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     logout: (state) => {
-      state.user  = null;
+      state.user = null;
       state.token = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     },
     resetAuthState: (state) => {
-      state.loginError    = null;
+      state.loginError = null;
       state.registerError = null;
-      state.otpError      = null;
-      state.resendError   = null;
-      state.googleError   = null;
-      state.otpSent       = false;
-      state.isVerified    = false;
+      state.otpError = null;
+      state.resendError = null;
+      state.googleError = null;
+      state.otpSent = false;
+      state.isVerified = false;
     },
-    clearLoginError:    (state) => { state.loginError    = null; },
-    clearRegisterError: (state) => { state.registerError = null; },
-    clearOtpError:      (state) => { state.otpError      = null; },
-    clearGoogleError:   (state) => { state.googleError   = null; },
+    clearLoginError: (state) => {
+      state.loginError = null;
+    },
+    clearRegisterError: (state) => {
+      state.registerError = null;
+    },
+    clearOtpError: (state) => {
+      state.otpError = null;
+    },
+    clearGoogleError: (state) => {
+      state.googleError = null;
+    },
   },
   extraReducers: (builder) => {
-
-    // ── Register (Step 1) ─────────────────────────────────
     builder
       .addCase(registerUser.pending, (state) => {
         state.isRegisterLoading = true;
-        state.registerError     = null;
+        state.registerError = null;
       })
       .addCase(registerUser.fulfilled, (state) => {
         state.isRegisterLoading = false;
-        state.otpSent           = true;
+        state.otpSent = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isRegisterLoading = false;
-        state.registerError     = action.payload as string;
+        state.registerError = action.payload as string;
       });
 
-    // ── Verify OTP (Step 2) ───────────────────────────────
     builder
       .addCase(verifyOtpUser.pending, (state) => {
         state.isOtpLoading = true;
-        state.otpError     = null;
+        state.otpError = null;
       })
       .addCase(verifyOtpUser.fulfilled, (state, action) => {
         state.isOtpLoading = false;
-        state.isVerified   = true;
-        state.user         = action.payload.user;
-        state.token        = action.payload.token;
-        state.otpSent      = false;
+        state.isVerified = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token ?? state.token;
+        state.otpSent = false;
       })
       .addCase(verifyOtpUser.rejected, (state, action) => {
         state.isOtpLoading = false;
-        state.otpError     = action.payload as string;
+        state.otpError = action.payload as string;
       });
 
-    // ── Resend OTP ────────────────────────────────────────
     builder
       .addCase(resendOtpUser.pending, (state) => {
         state.isResendLoading = true;
-        state.resendError     = null;
-        state.otpError        = null;
+        state.resendError = null;
+        state.otpError = null;
       })
       .addCase(resendOtpUser.fulfilled, (state) => {
         state.isResendLoading = false;
       })
       .addCase(resendOtpUser.rejected, (state, action) => {
         state.isResendLoading = false;
-        state.resendError     = action.payload as string;
+        state.resendError = action.payload as string;
       });
 
-    // ── Login ─────────────────────────────────────────────
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoginLoading = true;
-        state.loginError     = null;
+        state.loginError = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoginLoading = false;
-        state.user           = action.payload.user;
-        state.token          = action.payload.token;
+        state.user = action.payload.user;
+        state.token = action.payload.token ?? state.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoginLoading = false;
-        state.loginError     = action.payload as string;
+        state.loginError = action.payload as string;
       });
 
-    // ── Google Auth ───────────────────────────────────────
+    builder
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+      });
+
     builder
       .addCase(googleAuthUser.pending, (state) => {
         state.isGoogleLoading = true;
-        state.googleError     = null;
+        state.googleError = null;
       })
       .addCase(googleAuthUser.fulfilled, (state, action) => {
         state.isGoogleLoading = false;
-        state.user            = action.payload.user;
-        state.token           = action.payload.token;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
       })
       .addCase(googleAuthUser.rejected, (state, action) => {
         state.isGoogleLoading = false;
-        state.googleError     = action.payload as string;
+        state.googleError = action.payload as string;
       });
 
-    // ── Fetch Current User (GET /auth/me) ─────────────────
     builder
       .addCase(fetchCurrentUser.pending, (state) => {
         state.isMeLoading = true;
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.isMeLoading = false;
-        state.user        = action.payload;
+        state.user = action.payload;
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
-        // Token invalid — clear session entirely
         state.isMeLoading = false;
-        state.user        = null;
-        state.token       = null;
+        state.user = null;
+        state.token = null;
       });
   },
 });

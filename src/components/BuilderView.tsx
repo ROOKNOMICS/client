@@ -11,9 +11,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { runBacktest } from '@/store/backtestSlice';
 import { clearBacktest } from '@/store/backtestSlice';
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch } from '../store/index'
 import { apiRequest } from '@/lib/api'
+import type { RootState } from '@/store'
 
 interface BuilderViewProps {
   setCurrentView: (v: string) => void;
@@ -188,6 +189,7 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
   const [takeProfitPercent, setTakeProfitPercent] = useState(20);
   const [isRunning, setIsRunning] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const backtestError = useSelector((state: RootState) => state.backtest.error);
 
   const formatMonthYear = (dateStr: string) => {
     if (!dateStr) return '';
@@ -576,6 +578,12 @@ export default function BuilderView({ setCurrentView }: BuilderViewProps) {
               <RotateCcw size={11} />
               RESET DEFAULTS
             </button>
+            {backtestError && (
+              <div className="border border-rose-400/20 bg-rose-400/5 px-4 py-3">
+                <p className="text-[10px] tracking-[0.18em] text-rose-300 uppercase mb-1">Simulation Error</p>
+                <p className="text-xs text-rose-200 leading-relaxed">{backtestError}</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Analysis note */}

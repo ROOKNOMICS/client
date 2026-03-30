@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -8,6 +7,7 @@ import {
   resendOtpUser,
   googleAuthUser,
   fetchCurrentUser,
+  logoutUser,
   logout,
   resetAuthState,
   clearLoginError,
@@ -19,34 +19,29 @@ import type { GoogleAuthPayload } from '../lib/api';
 
 export function useAuth() {
   const dispatch = useDispatch<AppDispatch>();
-  const auth     = useSelector((state: RootState) => state.auth);
+  const auth = useSelector((state: RootState) => state.auth);
 
   return {
-    // ── State ──────────────────────────────────────────────
-    user:       auth.user,
-    token:      auth.token,
-    isLoggedIn: !!auth.user && !!auth.token,
+    user: auth.user,
+    token: auth.token,
+    isLoggedIn: !!auth.user,
 
-    // Loading states
-    isLoginLoading:    auth.isLoginLoading,
+    isLoginLoading: auth.isLoginLoading,
     isRegisterLoading: auth.isRegisterLoading,
-    isOtpLoading:      auth.isOtpLoading,
-    isResendLoading:   auth.isResendLoading,
-    isGoogleLoading:   auth.isGoogleLoading,
-    isMeLoading:       auth.isMeLoading,
+    isOtpLoading: auth.isOtpLoading,
+    isResendLoading: auth.isResendLoading,
+    isGoogleLoading: auth.isGoogleLoading,
+    isMeLoading: auth.isMeLoading,
 
-    // Error states
-    loginError:    auth.loginError,
+    loginError: auth.loginError,
     registerError: auth.registerError,
-    otpError:      auth.otpError,
-    resendError:   auth.resendError,
-    googleError:   auth.googleError,
+    otpError: auth.otpError,
+    resendError: auth.resendError,
+    googleError: auth.googleError,
 
-    // Flow flags
-    otpSent:    auth.otpSent,
+    otpSent: auth.otpSent,
     isVerified: auth.isVerified,
 
-    // ── Handlers ──────────────────────────────────────────
     handleRegister: (name: string, email: string, password: string) =>
       dispatch(registerUser({ name, email, password })),
 
@@ -59,21 +54,21 @@ export function useAuth() {
     handleResendOtp: (email: string) =>
       dispatch(resendOtpUser({ email })),
 
-    /** POST /api/auth/google — send decoded Google user payload */
     handleGoogleAuth: (payload: GoogleAuthPayload) =>
       dispatch(googleAuthUser(payload)),
 
-    /** GET /api/auth/me — validate JWT + refresh user data from server */
     fetchCurrentUser: () =>
       dispatch(fetchCurrentUser()),
 
-    handleLogout: () => dispatch(logout()),
+    handleLogout: async () => {
+      await dispatch(logoutUser());
+      dispatch(logout());
+    },
 
-    // ── Error clearers ─────────────────────────────────────
-    clearLoginError:    () => dispatch(clearLoginError()),
+    clearLoginError: () => dispatch(clearLoginError()),
     clearRegisterError: () => dispatch(clearRegisterError()),
-    clearOtpError:      () => dispatch(clearOtpError()),
-    clearGoogleError:   () => dispatch(clearGoogleError()),
+    clearOtpError: () => dispatch(clearOtpError()),
+    clearGoogleError: () => dispatch(clearGoogleError()),
 
     resetAuth: () => dispatch(resetAuthState()),
   };

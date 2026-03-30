@@ -634,7 +634,7 @@ interface LandingViewProps {
   setShowAuth: (v: boolean) => void;
 }
 
-export default function LandingView({ setCurrentView, setShowAuth }: LandingViewProps) {
+export default function LandingView({ setCurrentView, setShowAuth: _setShowAuth }: LandingViewProps) {
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 800], [0, 120]);
   const [bootComplete, setBootComplete] = useState(false);
