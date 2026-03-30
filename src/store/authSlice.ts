@@ -1,11 +1,7 @@
-// src/store/authSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi, AuthUser } from '../lib/api';
+import { authApi } from '../lib/api';
+import type { AuthUser, GoogleAuthPayload } from '../lib/api';
 
-// ── Async thunks ──────────────────────────────────────────
-
-// STEP 1: Submit register form → sends OTP, does NOT log user in yet
-// Returns the email so OtpDialog knows which address to show
 export const registerUser = createAsyncThunk(
   'auth/register',
   async (
@@ -13,15 +9,13 @@ export const registerUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const data = await authApi.register(payload);
-      return data; // { message, email }
+      return await authApi.register(payload);
     } catch (err: any) {
       return rejectWithValue(err.message || 'Registration failed');
     }
   }
 );
 
-// STEP 2: Submit OTP → verifies, creates account, logs user in
 export const verifyOtpUser = createAsyncThunk(
   'auth/verifyOtp',
   async (
@@ -30,30 +24,26 @@ export const verifyOtpUser = createAsyncThunk(
   ) => {
     try {
       const data = await authApi.verifyOtp(payload);
-      // Persist token + user so page refresh keeps them logged in
-    
+      if (data.token) localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      return data; // { token, user, message }
+      return data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'OTP verification failed');
     }
   }
 );
 
-// RESEND: Generate a fresh OTP — only updates backend, no state change
 export const resendOtpUser = createAsyncThunk(
   'auth/resendOtp',
   async (payload: { email: string }, { rejectWithValue }) => {
     try {
-      const data = await authApi.resendOtp(payload);
-      return data; // { message }
+      return await authApi.resendOtp(payload);
     } catch (err: any) {
       return rejectWithValue(err.message || 'Resend failed');
     }
   }
 );
 
-// LOGIN: Normal email + password login
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (
@@ -62,159 +52,226 @@ export const loginUser = createAsyncThunk(
   ) => {
     try {
       const data = await authApi.login(payload);
-     
+      if (data.token) localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      return data; // { token, user }
+      return data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Login failed');
     }
   }
 );
+
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      await authApi.logout(); // tells server to clear the cookie
+      await authApi.logout();
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
     } catch (err: any) {
-      return rejectWithValue(err.message);
+      return rejectWithValue(err.message || 'Logout failed');
     }
   }
 );
-// ── State ─────────────────────────────────────────────────
+
+export const googleAuthUser = createAsyncThunk(
+  'auth/google',
+  async (payload: GoogleAuthPayload, { rejectWithValue }) => {
+    try {
+      const data = await authApi.googleAuth(payload);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Google sign-in failed');
+    }
+  }
+);
+
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await authApi.getMe();
+      localStorage.setItem('user', JSON.stringify(data.user));
+      return data.user;
+    } catch (err: any) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return rejectWithValue(err.message || 'Session expired');
+    }
+  }
+);
+
 interface AuthState {
   user: AuthUser | null;
-  
-
-  // Separate loading flags so dialogs know which button to spin
+  token: string | null;
   isLoginLoading: boolean;
   isRegisterLoading: boolean;
   isOtpLoading: boolean;
   isResendLoading: boolean;
-
-  // Separate error fields so each dialog shows the right error
+  isGoogleLoading: boolean;
+  isMeLoading: boolean;
   loginError: string | null;
   registerError: string | null;
   otpError: string | null;
   resendError: string | null;
-
-  // Set to true after register succeeds — triggers OtpDialog to open
+  googleError: string | null;
   otpSent: boolean;
-
-  // Set to true after verifyOtp succeeds — triggers dialogs to close
   isVerified: boolean;
 }
 
-// Rehydrate from localStorage on page refresh
-
-const savedUser  = localStorage.getItem('user');
+const savedUser = localStorage.getItem('user');
+const savedToken = localStorage.getItem('token');
 
 const initialState: AuthState = {
-  user:    savedUser  ? JSON.parse(savedUser)  : null,
-   // We rely on httpOnly cookie for auth, so no need to persist token in localStorage
-
-  isLoginLoading:    false,
+  user: savedUser ? JSON.parse(savedUser) : null,
+  token: savedToken,
+  isLoginLoading: false,
   isRegisterLoading: false,
-  isOtpLoading:      false,
-  isResendLoading:   false,
-
-  loginError:    null,
+  isOtpLoading: false,
+  isResendLoading: false,
+  isGoogleLoading: false,
+  isMeLoading: false,
+  loginError: null,
   registerError: null,
-  otpError:      null,
-  resendError:   null,
-
-  otpSent:    false,
+  otpError: null,
+  resendError: null,
+  googleError: null,
+  otpSent: false,
   isVerified: false,
 };
 
-// ── Slice ─────────────────────────────────────────────────
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     logout: (state) => {
-      state.user  = null;
-      
+      state.user = null;
+      state.token = null;
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
     },
-    // Call when user closes AuthDialog to reset everything
     resetAuthState: (state) => {
-      state.loginError    = null;
+      state.loginError = null;
       state.registerError = null;
-      state.otpError      = null;
-      state.resendError   = null;
-      state.otpSent       = false;
-      state.isVerified    = false;
+      state.otpError = null;
+      state.resendError = null;
+      state.googleError = null;
+      state.otpSent = false;
+      state.isVerified = false;
     },
-    // Clear individual errors when user starts typing again
-    clearLoginError:    (state) => { state.loginError    = null; },
-    clearRegisterError: (state) => { state.registerError = null; },
-    clearOtpError:      (state) => { state.otpError      = null; },
+    clearLoginError: (state) => {
+      state.loginError = null;
+    },
+    clearRegisterError: (state) => {
+      state.registerError = null;
+    },
+    clearOtpError: (state) => {
+      state.otpError = null;
+    },
+    clearGoogleError: (state) => {
+      state.googleError = null;
+    },
   },
   extraReducers: (builder) => {
-
-    // ── Register (Step 1) ─────────────────────────────────
     builder
       .addCase(registerUser.pending, (state) => {
         state.isRegisterLoading = true;
-        state.registerError     = null;
+        state.registerError = null;
       })
       .addCase(registerUser.fulfilled, (state) => {
         state.isRegisterLoading = false;
-        state.otpSent           = true;  // AuthDialog watches this to open OtpDialog
+        state.otpSent = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isRegisterLoading = false;
-        state.registerError     = action.payload as string;
+        state.registerError = action.payload as string;
       });
 
-    // ── Verify OTP (Step 2) ───────────────────────────────
     builder
       .addCase(verifyOtpUser.pending, (state) => {
         state.isOtpLoading = true;
-        state.otpError     = null;
+        state.otpError = null;
       })
       .addCase(verifyOtpUser.fulfilled, (state, action) => {
         state.isOtpLoading = false;
-        state.isVerified   = true;   // OtpDialog watches this to show success state
-        state.user         = action.payload.user;
-        //state.token        = action.payload.token;
-        state.otpSent      = false;
+        state.isVerified = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token ?? state.token;
+        state.otpSent = false;
       })
       .addCase(verifyOtpUser.rejected, (state, action) => {
         state.isOtpLoading = false;
-        state.otpError     = action.payload as string;
+        state.otpError = action.payload as string;
       });
 
-    // ── Resend OTP ────────────────────────────────────────
     builder
       .addCase(resendOtpUser.pending, (state) => {
         state.isResendLoading = true;
-        state.resendError     = null;
-        state.otpError        = null;
+        state.resendError = null;
+        state.otpError = null;
       })
       .addCase(resendOtpUser.fulfilled, (state) => {
         state.isResendLoading = false;
       })
       .addCase(resendOtpUser.rejected, (state, action) => {
         state.isResendLoading = false;
-        state.resendError     = action.payload as string;
+        state.resendError = action.payload as string;
       });
 
-    // ── Login ─────────────────────────────────────────────
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoginLoading = true;
-        state.loginError     = null;
+        state.loginError = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoginLoading = false;
-        state.user           = action.payload.user;
-        //state.token          = action.payload.token;
+        state.user = action.payload.user;
+        state.token = action.payload.token ?? state.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoginLoading = false;
-        state.loginError     = action.payload as string;
+        state.loginError = action.payload as string;
+      });
+
+    builder
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+      });
+
+    builder
+      .addCase(googleAuthUser.pending, (state) => {
+        state.isGoogleLoading = true;
+        state.googleError = null;
+      })
+      .addCase(googleAuthUser.fulfilled, (state, action) => {
+        state.isGoogleLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(googleAuthUser.rejected, (state, action) => {
+        state.isGoogleLoading = false;
+        state.googleError = action.payload as string;
+      });
+
+    builder
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.isMeLoading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.isMeLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.isMeLoading = false;
+        state.user = null;
+        state.token = null;
       });
   },
 });
@@ -225,6 +282,7 @@ export const {
   clearLoginError,
   clearRegisterError,
   clearOtpError,
+  clearGoogleError,
 } = authSlice.actions;
 
 export default authSlice.reducer;
